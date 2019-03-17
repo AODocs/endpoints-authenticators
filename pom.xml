@@ -25,11 +25,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <http-client.version>1.27.0</http-client.version>
-        <jackson.version>2.9.7</jackson.version>
-        <gae.version>1.9.68</gae.version>
+        <endpoints-framework.version>2.2.1</endpoints-framework.version>
+        <!--Should be compatible with version from endpoints-framework-->        
+        <jackson.version>2.9.8</jackson.version>
+        <http-client.version>1.25.0</http-client.version>
+        <repackagedDir>endpoints.repackaged</repackagedDir>
 
-        <endpoints-framework.version>2.2.0</endpoints-framework.version>
+        <gae.version>1.9.68</gae.version>
     </properties>
 
     <dependencyManagement>
@@ -50,19 +52,17 @@
             <groupId>com.google.endpoints</groupId>
             <artifactId>endpoints-framework</artifactId>
             <version>${endpoints-framework.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!--Utils-->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>27.0.1-jre</version>
-        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.4</version>
         </dependency>
+        
+        <!--Jackson-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -103,7 +103,7 @@
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-iam</artifactId>
-            <version>v1-rev20181005-${http-client.version}</version>
+            <version>v1-rev282-${http-client.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>guava-jdk5</artifactId>
@@ -141,7 +141,7 @@
             <version>1</version>
         </dependency>
 
-        <!-- Required Appengine dependencies -->
+        <!-- Appengine dependencies -->
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
@@ -155,8 +155,8 @@
             <optional>true</optional>
         </dependency>
 
-        <!--Find a more recent tool to do that-->
         <!--Classpath scanning-->
+        <!--TODO Find a more recent lib-->
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
@@ -247,7 +247,46 @@
                         <phase>process-sources</phase>
                         <configuration>
                             <failOnMissingHeader>true</failOnMissingHeader>
-                            <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
+                            <failOnNotUptodateHeader>false</failOnNotUptodateHeader>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--creates an artifact with "all" classifier, to be used with endpoints-framework-all-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>all</shadedClassifierName>
+                            <artifactSet>
+                                <includes>
+                                    <include>com.fasterxml.jackson.*:*</include>
+                                </includes>
+                            </artifactSet>
+                            <relocations>
+                                <!--Used-->
+                                <relocation>
+                                    <pattern>com.fasterxml</pattern>
+                                    <shadedPattern>${repackagedDir}.com.fasterxml</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google.api.client</pattern>
+                                    <shadedPattern>${repackagedDir}.com.google.api.client</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google.common</pattern>
+                                    <shadedPattern>${repackagedDir}.com.google.common</shadedPattern>
+                                </relocation>
+                                <!--endpoints-framework has other relocations, but not relevant to this project-->
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>

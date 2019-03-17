@@ -21,8 +21,6 @@ package com.aodocs.endpoints.auth.init;
 
 import com.google.api.server.spi.config.*;
 import com.google.api.server.spi.request.Auth;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
 import lombok.extern.java.Log;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -38,6 +36,7 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -51,12 +50,12 @@ public class EagerAuthenticatorInitializer implements ServletContextListener {
         Reflections reflections = new Reflections(sce.getServletContext().getInitParameter("apiPackagePrefix"),
                 new MethodAnnotationsScanner(), new TypeAnnotationsScanner(), new SubTypesScanner());
         try {
-            ImmutableSet<Class<? extends Authenticator>> uniqueAuthenticatorClasses =
-                    Streams.concat(
+            Set<Class<? extends Authenticator>> uniqueAuthenticatorClasses =
+                    Stream.concat(Stream.concat(
                             getAuthenticators(reflections.getMethodsAnnotatedWith(ApiMethod.class), ApiMethod.class),
-                            getAuthenticators(reflections.getTypesAnnotatedWith(Api.class), Api.class),
+                            getAuthenticators(reflections.getTypesAnnotatedWith(Api.class), Api.class)),
                             getAuthenticators(reflections.getTypesAnnotatedWith(ApiClass.class), ApiClass.class))
-                            .collect(ImmutableSet.toImmutableSet());
+                            .collect(Collectors.toSet());
             long authenticatorCount = uniqueAuthenticatorClasses.stream()
 		            .map(Auth::instantiateAuthenticator)
                     .filter(Objects::nonNull)
