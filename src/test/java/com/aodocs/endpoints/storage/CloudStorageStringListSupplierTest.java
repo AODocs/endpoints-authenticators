@@ -82,15 +82,13 @@ public class CloudStorageStringListSupplierTest extends AppEngineTest {
         //add a new value
         ImmutableList<String> lines2 = ImmutableList.of("1", "2", "3", "4");
         Files.write(path, lines2, StandardCharsets.UTF_8);
-        //still has the cached value
-        assertEquals(lines, supplier.get());
-        //let the cache expire
-        TimeUnit.SECONDS.sleep(3);
-        //still returns the old value, but triggered a refresh
-        //assertEquals(lines, supplier.get()); //test is flakky here: refresh might happen quickly enough to return new value
-        //let the refresh happen
-        TimeUnit.SECONDS.sleep(1);
-        assertEquals(lines2, supplier.get());    }
+        
+        TimeUnit.SECONDS.sleep(2); //Let the cache expire
+        supplier.get(); //Return the old value but trigger a reload
+        
+        TimeUnit.SECONDS.sleep(1); //Let the reload occur
+        assertEquals(lines2, supplier.get());
+    }
 
     @Test
     public void testMissingWithoutFailOnMissing() {
