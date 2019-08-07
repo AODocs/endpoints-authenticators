@@ -248,6 +248,9 @@
                         <configuration>
                             <failOnMissingHeader>true</failOnMissingHeader>
                             <failOnNotUptodateHeader>false</failOnNotUptodateHeader>
+                            <includes>
+                                **/*.java
+                            </includes>
                         </configuration>
                     </execution>
                 </executions>

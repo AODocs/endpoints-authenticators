@@ -19,16 +19,20 @@
  */
 package com.aodocs.endpoints.util;
 
+import static org.junit.Assert.assertEquals;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+import org.junit.Test;
+
 import com.aodocs.endpoints.auth.AppEngineTest;
 import com.aodocs.endpoints.auth.FakeTicker;
 import com.google.appengine.api.ThreadManager;
 import com.google.common.base.Stopwatch;
-import org.junit.Test;
-
-import java.util.function.Supplier;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Clement on 17/10/2016.
@@ -67,4 +71,28 @@ public class AsyncRefreshMemoizingSupplierTest extends AppEngineTest {
         assertEquals(200, stopwatch.elapsed(MILLISECONDS));
     }
 
+    @Test
+    public void testRefreshIsAsyncNoTicker() throws InterruptedException {
+        Supplier<Integer> incSupplier = new Supplier<Integer>() {
+            AtomicInteger value = new AtomicInteger(0);
+            
+            @Override
+            public Integer get() {
+                int andIncrement = value.getAndIncrement();
+                System.err.println("Value returned:" + andIncrement + ", currentValue=" + value.get());
+                return andIncrement;
+            }
+        };
+        
+        AsyncRefreshMemoizingSupplier<Integer> cache = new AsyncRefreshMemoizingSupplier<>(2, incSupplier, ThreadManager.backgroundThreadFactory());
+        assertEquals(0, cache.get().intValue());
+       
+        TimeUnit.SECONDS.sleep(3);
+        cache.get(); //Return the old value but triggers a refresh
+        
+        TimeUnit.SECONDS.sleep(1);
+        assertEquals(1, cache.get().intValue());
+        
+    }
+    
 }

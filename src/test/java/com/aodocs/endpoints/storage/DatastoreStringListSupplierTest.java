@@ -19,38 +19,47 @@
  */
 package com.aodocs.endpoints.storage;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.threeten.bp.Duration;
+
 import com.aodocs.endpoints.auth.AppEngineTest;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.testing.LocalDatastoreHelper;
 import com.google.common.collect.ImmutableList;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.threeten.bp.Duration;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * This test is very slow, because of the local DS emulator.
+ *
+ * This test requires local installation of gcloud (with the "beta" component installed)
  */
 public class DatastoreStringListSupplierTest extends AppEngineTest {
 
-    private LocalDatastoreHelper helper;
-
-    @Before
-    public void startHelper() throws IOException, InterruptedException {
+    private static LocalDatastoreHelper helper;
+    
+    @BeforeClass
+    public static void createAndStartHelper() throws IOException, InterruptedException {
         helper = LocalDatastoreHelper.create(1);
         helper.start();
     }
 
-    @After
-    public void stopHelper() throws IOException, InterruptedException, TimeoutException {
+    @Before
+    public void startHelper() throws IOException, InterruptedException {
+        helper.reset();
+    }
+
+    @AfterClass
+    public static void stopHelper() throws IOException, InterruptedException, TimeoutException {
         helper.stop(Duration.ofMinutes(1));
     }
 
@@ -64,7 +73,6 @@ public class DatastoreStringListSupplierTest extends AppEngineTest {
         datastoreService.put(Entity.newBuilder(Key.newBuilder(helper.getProjectId(), "ClientId", "12345").setNamespace("ns").build()).build());
         assertEquals(ImmutableList.of("12345"), new DatastoreStringListSupplier("ClientId", "ns", 1, helper.getOptions()).get());
     }
-
 
     @Test
     public void testCaching() throws Exception {
