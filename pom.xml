@@ -22,6 +22,13 @@
         </license>
     </licenses>
 
+    <scm>
+        <connection>scm:git:${endpoints-authenticators.scm.connection}</connection>
+        <developerConnection>scm:git:${endpoints-authenticators.scm.connection}</developerConnection>
+        <url>${endpoints-authenticators.scm.url}</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -32,6 +39,9 @@
         <repackagedDir>endpoints.repackaged</repackagedDir>
 
         <gae.version>1.9.68</gae.version>
+
+        <endpoints-authenticators.scm.connection>git@github.com:AODocs/endpoints-authenticators.git</endpoints-authenticators.scm.connection>
+        <endpoints-authenticators.scm.url>https://github.com/AODocs/endpoints-authenticators</endpoints-authenticators.scm.url>
     </properties>
 
     <dependencyManagement>
