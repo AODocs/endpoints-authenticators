@@ -23,7 +23,9 @@ import com.aodocs.endpoints.auth.AuthInfo;
 import com.aodocs.endpoints.auth.AuthType;
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.google.api.server.spi.EnvUtil;
+import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
+import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.config.Singleton;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.api.server.spi.request.Attribute;
@@ -47,6 +49,8 @@ import java.util.Arrays;
 import java.util.Set;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by Clement on 20/10/2016.
@@ -62,6 +66,11 @@ public class ExtendedAuthenticatorTest {
 
     private MockHttpServletRequest request;
     private Attribute attr;
+    
+    @Mock
+    Authenticator delegate;
+    
+    ExtendedAuthenticator underTest;
 
     @Before
     public void setUp() {
@@ -80,14 +89,13 @@ public class ExtendedAuthenticatorTest {
 
     //mocks all required remote calls
     public static abstract class TestAuthenticator extends ExtendedAuthenticator {
-
-        @Override
-        protected User performPrimaryAuthentication(HttpServletRequest request, AuthType authType) {
-            return new User("123456789", "dummyuser@gmail.com");
+        
+        TestAuthenticator(Authenticator delegate) {
+            super(delegate);
         }
 
         @Override
-        AuthInfo getAuthInfo(AuthType authType, HttpServletRequest request, String token) {
+        AuthInfo getAuthInfo(HttpServletRequest request) {
             return createDummyAuthInfo("dummyuser@gmail.com", "12345", "scope1", "123456789");
         }
 
@@ -104,6 +112,11 @@ public class ExtendedAuthenticatorTest {
 
     @Singleton
     public static class PassAuthenticator extends TestAuthenticator {
+    
+        PassAuthenticator(Authenticator delegate) {
+            super(delegate);
+        }
+    
         @Override
         public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
             return new AuthorizationResult(true);
@@ -112,6 +125,11 @@ public class ExtendedAuthenticatorTest {
 
     @Singleton
     public static class DenyAuthenticator extends TestAuthenticator {
+    
+        DenyAuthenticator(Authenticator delegate) {
+            super(delegate);
+        }
+    
         @Override
         public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
             return new AuthorizationResult(false);
@@ -126,19 +144,14 @@ public class ExtendedAuthenticatorTest {
     }
 
     @Test
-    public void withoutHeader_thenNotPass() throws ServiceUnavailableException {
-        assertNull(new PassAuthenticator().authenticate(request));
-    }
-
-    @Test
-    public void withHeader_thenPass() throws ServiceUnavailableException {
-        request.addHeader("Authorization", "Bearer ya29.abcdefg");
-        assertNotNull(new PassAuthenticator().authenticate(request));
-        assertNull(new DenyAuthenticator().authenticate(request));
+    public void withHeader_thenPass() throws ServiceException {
+        when(delegate.authenticate(any(HttpServletRequest.class))).thenReturn(new User("123456789", "dummyuser@gmail.com"));
+        assertNotNull(new PassAuthenticator(delegate).authenticate(request));
+        assertNull(new DenyAuthenticator(delegate).authenticate(request));
     }
 
     @Test(expected = IllegalStateException.class)
-    public void notSingleton_thenFail() throws ServiceUnavailableException {
+    public void notSingleton_thenFail() throws ServiceException {
         new NotSingletonAuthenticator().authenticate(request);
     }
 

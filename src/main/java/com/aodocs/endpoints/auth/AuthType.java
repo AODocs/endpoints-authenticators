@@ -19,23 +19,14 @@
  */
 package com.aodocs.endpoints.auth;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.server.spi.Client;
-import com.google.api.server.spi.auth.GoogleAuth;
+import java.util.function.Supplier;
+
+import javax.servlet.http.HttpServletRequest;
+
 import com.google.api.server.spi.auth.GoogleJwtAuthenticator;
 import com.google.api.server.spi.auth.GoogleOAuth2Authenticator;
 import com.google.api.server.spi.auth.common.User;
-import com.google.api.server.spi.request.Attribute;
 import com.google.api.server.spi.response.ServiceUnavailableException;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Optional;
-import java.util.function.Supplier;
-
-import static com.aodocs.endpoints.auth.AuthType.ThrowingSupplier.unchecked;
 
 /**
  * Wraps built-in authenticators to detect the type of authentication in the request.
@@ -50,16 +41,6 @@ public enum AuthType {
         public User authenticate(HttpServletRequest request) throws ServiceUnavailableException {
             return new GoogleOAuth2Authenticator().authenticate(request);
         }
-
-        @Override
-        public AuthInfo getAuthInfo(HttpServletRequest request, String token) throws ServiceUnavailableException {
-            final GoogleAuth.TokenInfo cached = (GoogleAuth.TokenInfo) request.getAttribute(Attribute.TOKEN_INFO);
-            return new AuthInfo(token, Optional.ofNullable(cached).orElseGet(unchecked(() -> getTokenInfoRemote(token))));
-        }
-
-        GoogleAuth.TokenInfo getTokenInfoRemote(String token) throws ServiceUnavailableException {
-            return GoogleAuth.getTokenInfoRemote(token);
-        }
     },
     /**
      * JWT authentication (no authorization, only authentication)
@@ -70,27 +51,11 @@ public enum AuthType {
             return new GoogleJwtAuthenticator().authenticate(request);
         }
 
-        @Override
-        public AuthInfo getAuthInfo(HttpServletRequest request, String token) throws ServiceUnavailableException {
-            final GoogleIdToken cached = (GoogleIdToken) request.getAttribute(Attribute.ID_TOKEN);
-            return new AuthInfo(token, Optional.ofNullable(cached).orElseGet(unchecked(() -> getGoogleIdToken(token))));
-        }
-
-        GoogleIdToken getGoogleIdToken(String token) throws ServiceUnavailableException {
-            try {
-                return new GoogleIdTokenVerifier.Builder(Client.getInstance().getHttpTransport(),
-                        Client.getInstance().getJsonFactory()).build().verify(token);
-            } catch (GeneralSecurityException | IOException e) {
-                throw new ServiceUnavailableException("Failed to perform id token validation", e);
-            }
-        }
     };
 
     //TODO support ESP authenticator
 
     public abstract User authenticate(HttpServletRequest request) throws ServiceUnavailableException;
-
-    public abstract AuthInfo getAuthInfo(HttpServletRequest request, String token) throws ServiceUnavailableException;
 
     @FunctionalInterface
     public interface ThrowingSupplier<R> {
