@@ -28,9 +28,9 @@ import lombok.extern.java.Log;
 
 import com.aodocs.endpoints.auth.AuthInfo;
 import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.server.spi.ServiceException;
-import com.google.api.server.spi.auth.EndpointsAuthenticator;
 import com.google.api.server.spi.auth.GoogleAuth;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Authenticator;

@@ -19,20 +19,21 @@
  */
 package com.aodocs.endpoints.auth.authenticator;
 
-import com.aodocs.endpoints.auth.authenticator.clientid.ClientIdsAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.clientid.CurrentProjectClientIdAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.clientid.ProjectsAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.config.VersionContainsAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.config.VersionMatchesAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.logic.ConjunctAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.logic.DisjunctAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.logic.NegateAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.request.*;
-import com.aodocs.endpoints.auth.authenticator.role.ProjectMemberAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.role.ProjectOwnerAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.role.ProjectRolesAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.token.JwtOnlyAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.token.OAuth2OnlyAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.clientid.CurrentProjectClientIdAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.clientid.ProjectsAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.config.VersionContainsAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.config.VersionMatchesAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.logic.DisjunctAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.logic.NegateAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.request.*;
+import com.aodocs.endpoints.auth.authorizers.role.ProjectMemberAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.role.ProjectOwnerAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.role.ProjectRolesAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.token.JwtOnlyAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.token.OAuth2OnlyAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.aodocs.endpoints.storage.StringListSupplier;
 import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
