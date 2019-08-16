@@ -19,17 +19,19 @@
  */
 package com.aodocs.endpoints.auth.authenticator.request;
 
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * This authenticators allows only the provided HTTP method
  */
-public class HttpMethodAuthenticator extends ExtendedAuthenticator {
+public final class HttpMethodAuthenticator extends AbstractAuthorizer {
 
     public enum HttpMethod {
         DELETE, GET, POST, PUT, PATCH;
@@ -40,12 +42,12 @@ public class HttpMethodAuthenticator extends ExtendedAuthenticator {
     @JsonProperty
     private final HttpMethod httpMethod;
 
-    public HttpMethodAuthenticator(@JsonProperty("httpMethod") HttpMethod httpMethod) {
+    public HttpMethodAuthenticator(@JsonProperty("httpMethod") @NonNull HttpMethod httpMethod) {
         this.httpMethod = httpMethod;
     }
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return new AuthorizationResult(methodConfig.getHttpMethod().equalsIgnoreCase(httpMethod.name()));
+        return newResultBuilder().authorized(methodConfig.getHttpMethod().equalsIgnoreCase(httpMethod.name())).build();
     }
 }

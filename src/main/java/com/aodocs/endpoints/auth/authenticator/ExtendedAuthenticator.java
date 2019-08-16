@@ -19,13 +19,11 @@
  */
 package com.aodocs.endpoints.auth.authenticator;
 
-import java.util.function.Supplier;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.java.Log;
 
 import com.aodocs.endpoints.auth.AuthInfo;
@@ -39,7 +37,6 @@ import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.config.Singleton;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.api.server.spi.request.Attribute;
-import com.google.api.server.spi.response.ServiceUnavailableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -47,39 +44,26 @@ import com.google.common.base.Preconditions;
  * Base class for all extended authenticators provided by this project.
  */
 @Log
-public abstract class ExtendedAuthenticator implements Authenticator {
+@Singleton
+public class ExtendedAuthenticator implements Authenticator {
 
-    private static final String BASIC_USER_ATTR = "endpoints-authenticators:basicUser";
-    private static final String EXTENDED_USER_ATTR = "endpoints-authenticators:extendedUser";
-
-    //use an object to allow future extensions
-    @Value
-    public static class AuthorizationResult {
-        private final boolean authorized;
-    }
-
-    private final boolean isSingleton;
     private final Authenticator delegateAuthenticator;
+    private final Authorizer authorizer;
 
-    public ExtendedAuthenticator() {
-        this(new EndpointsAuthenticator());
-    }
-    
-    ExtendedAuthenticator(Authenticator delegate) {
-        this.isSingleton = this.getClass().getAnnotation(Singleton.class) != null;
+    ExtendedAuthenticator(Authenticator delegate, Authorizer authorizer) {
         this.delegateAuthenticator = delegate;
+        this.authorizer = authorizer;
     }
 
     @Override
     public User authenticate(final HttpServletRequest request) throws ServiceException {
         long start = System.currentTimeMillis();
-        Preconditions.checkState(isSingleton, "Extended authenticators must be singletons, as they cache externally loaded data");
 
         //disable client id checking, the whole point of this authenticator is to bypass it
         Attribute attribute = Attribute.from(request);
         attribute.remove(Attribute.ENABLE_CLIENT_ID_WHITELIST);
     
-        final User user = getFromRequestOrCompute(request, BASIC_USER_ATTR, () -> performPrimaryAuthentication(request));
+        final User user = delegateAuthenticator.authenticate(request);
         long standardAuthTime = System.currentTimeMillis() - start;
         
         //the user could be null at this point because the token does
@@ -88,17 +72,22 @@ public abstract class ExtendedAuthenticator implements Authenticator {
             return null;
         }
 
+        //Authorization
         try {
-            AuthInfo authInfo = getAuthInfo(request);
-            ExtendedUser extendedUser = getFromRequestOrCompute(request, EXTENDED_USER_ATTR, () -> getExtendedUser(authInfo, user));
+            ExtendedUser extendedUser = getExtendedUser(getAuthInfo(request), user);
             ApiMethodConfig methodConfig = attribute.get(Attribute.API_METHOD_CONFIG);
-            AuthorizationResult authorizationResult = isAuthorized(extendedUser, methodConfig, request);
-            long totalAuthTime = System.currentTimeMillis() - start;
-            String status = authorizationResult.isAuthorized() ? "AUTHORIZED" : "FORBIDDEN";
-            long overheadTime = totalAuthTime - standardAuthTime;
-            log.log(Level.INFO, "{0} authorization checked in {1} ms (overhead {2} ms) with status {3}",
-                    new Object[] {extendedUser.getEmail(), totalAuthTime, overheadTime, status});
+            Authorizer.AuthorizationResult authorizationResult = authorizer.isAuthorized(extendedUser, methodConfig, request);
+            
+            if (log.isLoggable(Level.INFO)) {
+                long totalAuthTime = System.currentTimeMillis() - start;
+                String status = authorizationResult.isAuthorized() ? "AUTHORIZED" : "FORBIDDEN";
+                long overheadTime = totalAuthTime - standardAuthTime;
+                log.log(Level.INFO, "{0} authorization checked in {1} ms (overhead {2} ms) with status {3}",
+                        new Object[] { extendedUser.getEmail(), totalAuthTime, overheadTime, status });
+            }
+            
             return authorizationResult.isAuthorized() ? extendedUser : null;
+            
         } catch (Exception e) {
             log.log(Level.SEVERE, "Cannot authenticate user with custom authenticator, returning standard User", e);
             return user;
@@ -109,16 +98,6 @@ public abstract class ExtendedAuthenticator implements Authenticator {
     private User performPrimaryAuthentication(HttpServletRequest request) {
         return delegateAuthenticator.authenticate(request);
     }
-
-    /**
-     * Override to implement custom authenticators
-     *
-     * @param extendedUser    a user containing additional information
-     * @param apiMethodConfig the config for the current API method
-     * @param request
-     * @return true to authorize, false to deny access.
-     */
-    public abstract AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request);
 
     private ExtendedUser getExtendedUser(AuthInfo authInfo, User basicUser) {
         log.fine("User: " + basicUser);
@@ -144,14 +123,4 @@ public abstract class ExtendedAuthenticator implements Authenticator {
         final GoogleIdToken tokenId = (GoogleIdToken) request.getAttribute(Attribute.ID_TOKEN);
         return new AuthInfo(tokenId);
     }
-
-    private <T> T getFromRequestOrCompute(HttpServletRequest request, String name, Supplier<T> supplier) {
-        T cached = (T) request.getAttribute(name);
-        if (cached == null) {
-            cached = supplier.get();
-            request.setAttribute(name, cached);
-        }
-        return cached;
-    }
-
 }

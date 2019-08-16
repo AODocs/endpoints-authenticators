@@ -19,24 +19,21 @@
  */
 package com.aodocs.endpoints.auth.authenticator.token;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.aodocs.endpoints.auth.AuthType;
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
 import com.aodocs.endpoints.auth.authenticator.logic.ConjunctAuthenticator;
-import com.google.api.server.spi.config.Singleton;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Only allows Oauth2 tokens. Should be used with {@link ConjunctAuthenticator}
  */
-@Singleton
-public class OAuth2OnlyAuthenticator extends ExtendedAuthenticator {
+public final class OAuth2OnlyAuthenticator extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return new AuthorizationResult(extendedUser.getAuthType() == AuthType.OAUTH2);
+        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.OAUTH2).build();
     }
-
 }

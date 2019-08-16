@@ -19,19 +19,20 @@
  */
 package com.aodocs.endpoints.auth.authenticator.request;
 
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.common.base.CharMatcher;
-import lombok.NonNull;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * This authenticators allows any method with the provided servlet path.
  */
-public class ServletPathAuthenticator extends ExtendedAuthenticator {
+public final class ServletPathAuthenticator extends AbstractAuthorizer {
 
     private static final CharMatcher NORMALIZER = CharMatcher.is('/');
 
@@ -44,7 +45,7 @@ public class ServletPathAuthenticator extends ExtendedAuthenticator {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return new AuthorizationResult(normalize(request.getServletPath()).equals(normalize(servletPath)));
+        return newResultBuilder().authorized(normalize(request.getServletPath()).equals(normalize(servletPath))).build();
     }
 
     private String normalize(String path) {

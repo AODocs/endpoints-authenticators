@@ -19,31 +19,32 @@
  */
 package com.aodocs.endpoints.auth.authenticator.logic;
 
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
+import com.aodocs.endpoints.auth.authenticator.Authorizer;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
- * Negates the provided authenticator authorization.
+ * Negates the provided authorizer result.
  */
-public class NegateAuthenticator extends ExtendedAuthenticator {
+public final class NegateAuthenticator extends AbstractAuthorizer {
 
     @JsonProperty("not")
-    private final ExtendedAuthenticator authenticator;
+    private final Authorizer authorizer;
 
     @JsonCreator
-    public NegateAuthenticator(ExtendedAuthenticator authenticator) {
-        this.authenticator = authenticator;
+    public NegateAuthenticator(@NonNull @JsonProperty("not") Authorizer authenticator) {
+        this.authorizer = authenticator;
     }
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return new AuthorizationResult(
-                !authenticator.isAuthorized(extendedUser, apiMethodConfig, request).isAuthorized());
+        return newResultBuilder().authorized(!authorizer.isAuthorized(extendedUser, apiMethodConfig, request).isAuthorized()).build();
     }
-
 }

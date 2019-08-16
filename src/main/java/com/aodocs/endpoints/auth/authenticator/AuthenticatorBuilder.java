@@ -47,38 +47,27 @@ public class AuthenticatorBuilder {
 
     /**
      * Checks all authenticators are authorized.
-     *
-     * @param authenticators
-     * @return
      */
-    public static ConjunctAuthenticator and(ExtendedAuthenticator... authenticators) {
+    public static ConjunctAuthenticator and(Authorizer... authenticators) {
         return new ConjunctAuthenticator(authenticators);
     }
 
     /**
      * Checks any authenticator is authorized.
-     *
-     * @param authenticators
-     * @return
      */
-    public static DisjunctAuthenticator or(ExtendedAuthenticator... authenticators) {
+    public static DisjunctAuthenticator or(Authorizer... authenticators) {
         return new DisjunctAuthenticator(authenticators);
     }
 
     /**
      * Checks authenticator is not authorized.
-     *
-     * @param authenticator
-     * @return
      */
-    public static NegateAuthenticator not(ExtendedAuthenticator authenticator) {
+    public static NegateAuthenticator not(Authorizer authenticator) {
         return new NegateAuthenticator(authenticator);
     }
 
     /**
      * Checks if the client id used for authentication is from current project.
-     *
-     * @return
      */
     public static CurrentProjectClientIdAuthenticator currentProjectClientId() {
         return currentProjectClientId;
@@ -87,8 +76,6 @@ public class AuthenticatorBuilder {
 
     /**
      * Checks if the client id used for authentication is in the provided list.
-     *
-     * @return
      */
     public static ClientIdsAuthenticator clientIds(StringListSupplier clientIdSupplier) {
         return new ClientIdsAuthenticator(clientIdSupplier);
@@ -97,8 +84,6 @@ public class AuthenticatorBuilder {
     /**
      * Checks if the client id used for authentication is from any of the supplied projects.
      * It can't check service account client ids.
-     *
-     * @return
      */
     public static ProjectsAuthenticator projects(StringListSupplier projectNumbersSupplier) {
         return new ProjectsAuthenticator(projectNumbersSupplier);
@@ -106,9 +91,6 @@ public class AuthenticatorBuilder {
 
     /**
      * Checks if API version contains a subtring.
-     *
-     * @param mustContain
-     * @return
      */
     public static VersionContainsAuthenticator versionContains(String mustContain) {
         return new VersionContainsAuthenticator(mustContain);

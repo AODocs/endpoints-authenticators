@@ -19,27 +19,28 @@
  */
 package com.aodocs.endpoints.auth.authenticator.role;
 
-import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
-import com.aodocs.endpoints.context.ProjectConfigProvider;
-import com.google.api.server.spi.config.model.ApiMethodConfig;
-import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
+import com.aodocs.endpoints.context.ProjectConfigProvider;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Only authorizes project members.
  * Must be subclassed to implement authorized roles / role combination.
  */
-public abstract class ProjectRolesAuthenticator extends ExtendedAuthenticator {
+public abstract class ProjectRolesAuthenticator extends AbstractAuthorizer {
 
     @Override
-    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
+    public final AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
         ImmutableSet<String> userRoles =
                 ProjectConfigProvider.get().getCachedProjectConfig().getRolesFor(extendedUser.getEmail());
-        return new AuthorizationResult(authorizeRoles(Optional.ofNullable(userRoles).orElse(ImmutableSet.of())));
+        return newResultBuilder().authorized(authorizeRoles(Optional.ofNullable(userRoles).orElse(ImmutableSet.of()))).build();
     }
 
     protected abstract boolean authorizeRoles(@Nonnull ImmutableSet<String> userRoles);

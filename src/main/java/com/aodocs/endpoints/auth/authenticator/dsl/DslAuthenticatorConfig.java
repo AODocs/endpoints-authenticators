@@ -19,6 +19,10 @@
  */
 package com.aodocs.endpoints.auth.authenticator.dsl;
 
+import java.io.IOException;
+import java.util.Map;
+
+import com.aodocs.endpoints.auth.authenticator.Authorizer;
 import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
 import com.aodocs.endpoints.auth.authenticator.clientid.ClientIdsAuthenticator;
 import com.aodocs.endpoints.auth.authenticator.clientid.CurrentProjectClientIdAuthenticator;
@@ -32,15 +36,17 @@ import com.aodocs.endpoints.auth.authenticator.role.ProjectMemberAuthenticator;
 import com.aodocs.endpoints.auth.authenticator.role.ProjectOwnerAuthenticator;
 import com.aodocs.endpoints.auth.authenticator.token.JwtOnlyAuthenticator;
 import com.aodocs.endpoints.auth.authenticator.token.OAuth2OnlyAuthenticator;
-import com.aodocs.endpoints.storage.*;
+import com.aodocs.endpoints.storage.ClasspathStringListSupplier;
+import com.aodocs.endpoints.storage.CloudStorageStringListSupplier;
+import com.aodocs.endpoints.storage.DatastoreStringListSupplier;
+import com.aodocs.endpoints.storage.ExplicitStringListSupplier;
+import com.aodocs.endpoints.storage.MergingStringListSupplier;
+import com.aodocs.endpoints.storage.StringListSupplier;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.common.collect.ImmutableMap;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * This class provides a Jackson modules that will be able to serialize / deserialize complex authenticator configs
@@ -71,8 +77,8 @@ public interface DslAuthenticatorConfig {
     /**
      * ExtendedAuthenticators represented as objects in the DSL, determined by a discriminator property.
      */
-    ImmutableMap<String, Class<? extends ExtendedAuthenticator>> DISCRIMINATOR_PROPERTY_AUTHENTICATORS
-            = ImmutableMap.<String, Class<? extends ExtendedAuthenticator>>builder()
+    ImmutableMap<String, Class<? extends Authorizer>> DISCRIMINATOR_PROPERTY_AUTHENTICATORS
+            = ImmutableMap.<String, Class<? extends Authorizer>>builder()
             .put("and", ConjunctAuthenticator.class) //alias to all?
             .put("or", DisjunctAuthenticator.class) //alias to any?
             .put("not", NegateAuthenticator.class)
@@ -85,8 +91,8 @@ public interface DslAuthenticatorConfig {
     /**
      * ExtendedAuthenticators represented as strings in the DSL, determined by their name.
      */
-    Map<String, Class<? extends ExtendedAuthenticator>> SINGLETON_AUTHENTICATORS
-            = ImmutableMap.<String, Class<? extends ExtendedAuthenticator>>builder()
+    Map<String, Class<? extends Authorizer>> SINGLETON_AUTHENTICATORS
+            = ImmutableMap.<String, Class<? extends Authorizer>>builder()
             .put("jwt", JwtOnlyAuthenticator.class)  //alias to idToken?
             .put("oauth2", OAuth2OnlyAuthenticator.class)  //alias to accessToken?
             .put("currentProjectClientId", CurrentProjectClientIdAuthenticator.class)
@@ -94,8 +100,8 @@ public interface DslAuthenticatorConfig {
             .put("projectOwner", ProjectOwnerAuthenticator.class)
             .build();
 
-    DslDeserializer<ExtendedAuthenticator> AUTHENTICATOR_DESERIALIZER
-            = new DslDeserializer<>(ExtendedAuthenticator.class,
+    DslDeserializer<Authorizer> AUTHENTICATOR_DESERIALIZER
+            = new DslDeserializer<>(Authorizer.class,
             DISCRIMINATOR_PROPERTY_AUTHENTICATORS, SINGLETON_AUTHENTICATORS);
 
     /**
@@ -119,17 +125,17 @@ public interface DslAuthenticatorConfig {
 
     static SimpleModule buildModule() {
         final SimpleModule module = new SimpleModule()
-                .addDeserializer(ExtendedAuthenticator.class, AUTHENTICATOR_DESERIALIZER)
+                .addDeserializer(Authorizer.class, AUTHENTICATOR_DESERIALIZER)
                 .addDeserializer(StringListSupplier.class, STRING_SUPPLIER_DESERIALIZER);
         SINGLETON_AUTHENTICATORS.forEach((stringValue, singletonClass) ->
                 module.addSerializer(singletonClass, getSingletonSerializer(stringValue)));
         return module;
     }
 
-    static StdSerializer<ExtendedAuthenticator> getSingletonSerializer(final String stringValue) {
-        return new StdSerializer<ExtendedAuthenticator>(ExtendedAuthenticator.class) {
+    static StdSerializer<Authorizer> getSingletonSerializer(final String stringValue) {
+        return new StdSerializer<Authorizer>(Authorizer.class) {
             @Override
-            public void serialize(ExtendedAuthenticator value, JsonGenerator gen, SerializerProvider provider)
+            public void serialize(Authorizer value, JsonGenerator gen, SerializerProvider provider)
                     throws IOException {
                 gen.writeString(stringValue);
             }

@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * API version must match a regex
  */
-public class VersionMatchesAuthenticator extends VersionAuthenticator {
+public final class VersionMatchesAuthenticator extends VersionAuthenticator {
 
     @JsonProperty
     private final String versionMatches;

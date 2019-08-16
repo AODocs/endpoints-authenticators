@@ -19,20 +19,21 @@
  */
 package com.aodocs.endpoints.auth.authenticator.config;
 
-import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
-import com.google.api.server.spi.config.model.ApiMethodConfig;
-
 import javax.servlet.http.HttpServletRequest;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
  * Authorizes request based on API version. Can be useful to deny access to beta versions.
  */
-public abstract class VersionAuthenticator extends ExtendedAuthenticator {
+abstract class VersionAuthenticator extends AbstractAuthorizer {
+   
     @Override
-    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+    public final AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
         //version is a standard metric, no need to add it
-        return new AuthorizationResult(isAuthorized(apiMethodConfig.getApiClassConfig().getApiConfig().getVersion()));
+        return newResultBuilder().authorized(isAuthorized(apiMethodConfig.getApiClassConfig().getApiConfig().getVersion())).build();
     }
 
     protected abstract boolean isAuthorized(String version);

@@ -19,31 +19,40 @@
  */
 package com.aodocs.endpoints.auth.authenticator.combined;
 
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.logic.DisjunctAuthenticator;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.and;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.not;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.or;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.versionContains;
 
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.*;
+import javax.servlet.http.HttpServletRequest;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authenticator.Authorizer;
+import com.aodocs.endpoints.auth.authenticator.logic.DisjunctAuthenticator;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
  * Applies a specific authenticator on versions containing a specific string.
  * Can be useful to restrict usage of beta / internal API versions.
  * Must be subclassed or used in another authenticator.
  */
-public class RestrictedVersionAuthenticator extends DisjunctAuthenticator {
-
+public class RestrictedVersionAuthenticator implements Authorizer {
+    
     public static RestrictedVersionAuthenticator beta(
-            ExtendedAuthenticator defaultAuthenticator, ExtendedAuthenticator betaAuthenticator) {
+            Authorizer defaultAuthenticator, Authorizer betaAuthenticator) {
         return new RestrictedVersionAuthenticator(defaultAuthenticator, "beta", betaAuthenticator, true);
     }
 
     public static RestrictedVersionAuthenticator internal(
-            ExtendedAuthenticator defaultAuthenticator, ExtendedAuthenticator betaAuthenticator) {
+            Authorizer defaultAuthenticator, Authorizer betaAuthenticator) {
         return new RestrictedVersionAuthenticator(defaultAuthenticator, "internal", betaAuthenticator, true);
     }
+    
+    private final Authorizer delegate;
 
-    public RestrictedVersionAuthenticator(ExtendedAuthenticator defaultAuthenticator,
-                                          String ifVersionContains, ExtendedAuthenticator specificAuthenticator, boolean includeSpecificInDefault) {
-        super(
+    public RestrictedVersionAuthenticator(Authorizer defaultAuthenticator,
+                                          String ifVersionContains, Authorizer specificAuthenticator, boolean includeSpecificInDefault) {
+        delegate = new DisjunctAuthenticator(
                 and(
                         not(versionContains(ifVersionContains)),
                         includeSpecificInDefault
@@ -56,5 +65,9 @@ public class RestrictedVersionAuthenticator extends DisjunctAuthenticator {
                 )
         );
     }
-
+    
+    @Override
+    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+        return delegate.isAuthorized(extendedUser, apiMethodConfig, request);
+    }
 }

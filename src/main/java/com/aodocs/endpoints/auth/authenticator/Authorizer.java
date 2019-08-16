@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,23 +17,34 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authenticator.token;
+package com.aodocs.endpoints.auth.authenticator;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.aodocs.endpoints.auth.AuthType;
+import lombok.Builder;
+import lombok.Value;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
-import com.aodocs.endpoints.auth.authenticator.logic.ConjunctAuthenticator;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
-/**
- * Only allows JWT tokens. Should be used with {@link ConjunctAuthenticator}
- */
-public final class JwtOnlyAuthenticator extends AbstractAuthorizer {
-
-    @Override
-    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.JWT).build();
+public interface Authorizer {
+  
+  @Value
+  @Builder
+  final class AuthorizationResult {
+    private final boolean authorized;
+    
+    static AuthorizationResultBuilder builder() {
+      return new AuthorizationResultBuilder();
     }
+  }
+  /**
+   * Implements authorization logic.
+   *
+   * @param extendedUser    a user containing additional information
+   * @param apiMethodConfig the config for the current API method
+   * @param request
+   * @return true to authorize, false to deny access.
+   */
+  AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request);
 }

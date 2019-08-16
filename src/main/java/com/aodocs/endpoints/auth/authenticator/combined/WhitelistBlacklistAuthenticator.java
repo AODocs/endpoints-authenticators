@@ -19,10 +19,19 @@
  */
 package com.aodocs.endpoints.auth.authenticator.combined;
 
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.clientIds;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.currentProjectClientId;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.not;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.or;
+import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.projects;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authenticator.Authorizer;
 import com.aodocs.endpoints.auth.authenticator.logic.ConjunctAuthenticator;
 import com.google.api.server.spi.config.Singleton;
-
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.*;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
  * Simple combined authenticator that provide the following behaviour:
@@ -39,17 +48,16 @@ import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.*;
  * A client ID must be in the allowed list AND NOT in the denied list.
  */
 @Singleton
-public class WhitelistBlacklistAuthenticator extends ConjunctAuthenticator {
+public class WhitelistBlacklistAuthenticator implements Authorizer {
 
-    /**
-     * Uses default convention
-     */
+    private final Authorizer delegate;
+  
     public WhitelistBlacklistAuthenticator() {
         this(new CombinedStringListBuilder());
     }
 
     public WhitelistBlacklistAuthenticator(CombinedStringListBuilder slb) {
-        super(
+        delegate = new ConjunctAuthenticator(
                 or(
                         currentProjectClientId(),
                         clientIds(slb.whitelist("clientIds")),
@@ -61,5 +69,9 @@ public class WhitelistBlacklistAuthenticator extends ConjunctAuthenticator {
                 ))
         );
     }
-
+  
+  @Override
+  public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+    return delegate.isAuthorized(extendedUser, apiMethodConfig, request);
+  }
 }

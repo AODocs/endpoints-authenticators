@@ -20,7 +20,11 @@
 package com.aodocs.endpoints.auth.authenticator.combined;
 
 import com.aodocs.endpoints.context.AppengineHelper;
-import com.aodocs.endpoints.storage.*;
+import com.aodocs.endpoints.storage.ClasspathStringListSupplier;
+import com.aodocs.endpoints.storage.CloudStorageStringListSupplier;
+import com.aodocs.endpoints.storage.DatastoreStringListSupplier;
+import com.aodocs.endpoints.storage.MergingStringListSupplier;
+import com.aodocs.endpoints.storage.StringListSupplier;
 import com.google.common.base.Joiner;
 
 /**

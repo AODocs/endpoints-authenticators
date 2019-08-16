@@ -19,16 +19,14 @@
  */
 package com.aodocs.endpoints.auth.authenticator.role;
 
-import com.google.api.server.spi.config.Singleton;
-import com.google.common.collect.ImmutableSet;
-
 import javax.annotation.Nonnull;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Only authorizes project owners.
  */
-@Singleton
-public class ProjectOwnerAuthenticator extends ProjectRolesAuthenticator {
+public final class ProjectOwnerAuthenticator extends ProjectRolesAuthenticator {
 
     @Override
     protected boolean authorizeRoles(@Nonnull ImmutableSet<String> userRoles) {

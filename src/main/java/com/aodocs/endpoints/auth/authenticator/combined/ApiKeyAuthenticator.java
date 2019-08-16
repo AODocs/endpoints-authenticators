@@ -19,24 +19,35 @@
  */
 package com.aodocs.endpoints.auth.authenticator.combined;
 
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
-import com.aodocs.endpoints.auth.authenticator.logic.ConjunctAuthenticator;
-
 import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.not;
 import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.requiredQueryParamValue;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authenticator.Authorizer;
+import com.aodocs.endpoints.auth.authenticator.logic.ConjunctAuthenticator;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
  * Authenticator that checks API key, with both whitelist and blacklist.
  * Must be subclassed or used in another authenticator.
  */
-public class ApiKeyAuthenticator extends ConjunctAuthenticator {
+public class ApiKeyAuthenticator implements Authorizer {
+    
+    private final Authorizer delegate;
+    
 
-    public ApiKeyAuthenticator(CombinedStringListBuilder slb, ExtendedAuthenticator authenticator) {
-        super(
+    protected ApiKeyAuthenticator(CombinedStringListBuilder slb, Authorizer authenticator) {
+        delegate = new ConjunctAuthenticator(
                 requiredQueryParamValue("key", slb.whitelist("apiKeys")),
                 not(requiredQueryParamValue("key", slb.blacklist("apiKeys"))),
                 authenticator
         );
     }
-
+    
+    @Override
+    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+        return delegate.isAuthorized(extendedUser, apiMethodConfig, request);
+    }
 }

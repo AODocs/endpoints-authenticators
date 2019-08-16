@@ -19,19 +19,20 @@
  */
 package com.aodocs.endpoints.auth.authenticator.request;
 
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.client.util.Strings;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-import lombok.NonNull;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * This authenticator allows any request with a provided parameter, regardless of the value.
  */
-public class QueryParameterAuthenticator extends ExtendedAuthenticator {
+public final class QueryParameterAuthenticator extends AbstractAuthorizer {
 
     @JsonProperty
     private final String requiredQueryParam;
@@ -42,6 +43,6 @@ public class QueryParameterAuthenticator extends ExtendedAuthenticator {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return new AuthorizationResult(!Strings.isNullOrEmpty(request.getParameter(requiredQueryParam)));
+        return newResultBuilder().authorized(!Strings.isNullOrEmpty(request.getParameter(requiredQueryParam))).build();
     }
 }

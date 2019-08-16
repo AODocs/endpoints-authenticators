@@ -19,21 +19,22 @@
  */
 package com.aodocs.endpoints.auth.authenticator.request;
 
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
 import com.aodocs.endpoints.storage.StringListSupplier;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-import lombok.NonNull;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * This authenticator allows any request with a provided parameter paramName that has a value in the provided list.
  * Can be used to implement custom whitelisting logic for the "key" parameter used in the API management
  * features of Cloud Endpoints v2.
  */
-public class QueryParameterValueAuthenticator extends ExtendedAuthenticator {
+public final class QueryParameterValueAuthenticator extends AbstractAuthorizer {
 
     @JsonProperty
     private final String paramName;
@@ -53,6 +54,6 @@ public class QueryParameterValueAuthenticator extends ExtendedAuthenticator {
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
         String parameter = request.getParameter(paramName);
-        return new AuthorizationResult(parameter == null ? allowIfAbsent : valuesSupplier.get().contains(parameter));
+        return newResultBuilder().authorized(parameter == null ? allowIfAbsent : valuesSupplier.get().contains(parameter)).build();
     }
 }

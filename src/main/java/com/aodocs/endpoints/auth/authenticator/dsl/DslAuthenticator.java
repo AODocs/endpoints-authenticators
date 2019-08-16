@@ -19,8 +19,16 @@
  */
 package com.aodocs.endpoints.auth.authenticator.dsl;
 
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.experimental.Delegate;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
+import com.aodocs.endpoints.auth.authenticator.Authorizer;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,11 +41,6 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import lombok.experimental.Delegate;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * This authenticator builds a complex authenticator using a DSL.
@@ -45,12 +48,11 @@ import java.util.List;
  * TODO: describe the DSL
  **
  */
-public class DslAuthenticator extends ExtendedAuthenticator {
+public class DslAuthenticator extends AbstractAuthorizer {
 
     public enum Format {
         YAML(new YAMLMapper()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)),
-//        XML(new XmlMapper()), //TODO try make it work?
         JSON(new ObjectMapper());
 
         @Delegate
@@ -69,14 +71,14 @@ public class DslAuthenticator extends ExtendedAuthenticator {
             new ParameterNamesModule(JsonCreator.Mode.PROPERTIES)
     );
 
-    private final ExtendedAuthenticator delegate;
+    private final Authorizer delegate;
 
     public DslAuthenticator(String dslConfig, Format format) throws IOException {
-        this(format.reader().forType(ExtendedAuthenticator.class).readValue(dslConfig));
+        this(format.reader().forType(Authorizer.class).readValue(dslConfig));
     }
 
     @VisibleForTesting
-    DslAuthenticator(ExtendedAuthenticator delegate) {
+    DslAuthenticator(Authorizer delegate) {
         this.delegate = delegate instanceof DslAuthenticator ? ((DslAuthenticator) delegate).delegate : delegate;
     }
 

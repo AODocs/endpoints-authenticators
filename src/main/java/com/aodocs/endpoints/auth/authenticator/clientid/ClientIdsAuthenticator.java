@@ -19,20 +19,21 @@
  */
 package com.aodocs.endpoints.auth.authenticator.clientid;
 
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
 import com.aodocs.endpoints.storage.StringListSupplier;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-import lombok.NonNull;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * This authenticator allows any token issued by a client id in the provided list.
  */
-public class ClientIdsAuthenticator extends ExtendedAuthenticator {
+public final class ClientIdsAuthenticator extends AbstractAuthorizer {
 
     @JsonProperty("clientIds")
     private final StringListSupplier clientIdSupplier;
@@ -43,8 +44,6 @@ public class ClientIdsAuthenticator extends ExtendedAuthenticator {
     }
 
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        //client id is a standard metric, no need to add it
-        return new AuthorizationResult(clientIdSupplier.get().contains(extendedUser.getAuthInfo().getClientId()));
+        return newResultBuilder().authorized(clientIdSupplier.get().contains(extendedUser.getAuthInfo().getClientId())).build();
     }
-
 }

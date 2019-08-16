@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * API version must contain a string
  */
 
-public class VersionContainsAuthenticator extends VersionAuthenticator {
+public final class VersionContainsAuthenticator extends VersionAuthenticator {
 
     @JsonProperty
     private final String versionContains;

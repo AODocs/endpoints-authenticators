@@ -19,20 +19,23 @@
  */
 package com.aodocs.endpoints.auth.authenticator.clientid;
 
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
 import com.aodocs.endpoints.context.ProjectConfigProvider;
 import com.aodocs.endpoints.storage.StringListSupplier;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-import lombok.NonNull;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * This authenticator allows any token issued by the provided list of project numbers (digit-only id).
  * Does not support service accounts !! Only web client ids from other projects can be identified.
  */
-public class ProjectsAuthenticator extends ExtendedAuthenticator {
+public final class ProjectsAuthenticator extends AbstractAuthorizer {
 
     private final StringListSupplier projectNumberSupplier;
 
@@ -42,7 +45,9 @@ public class ProjectsAuthenticator extends ExtendedAuthenticator {
 
     public AuthorizationResult isAuthorized(final ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
         String projectNumber = ProjectConfigProvider.extractProjectNumber(extendedUser.getAuthInfo().getClientId());
-        return new AuthorizationResult(projectNumber != null && projectNumberSupplier.get().contains(projectNumber));
+        List<String> projectNumbers = projectNumberSupplier.get();
+        
+        return newResultBuilder().authorized(projectNumbers != null && projectNumbers.contains(projectNumber)).build();
     }
 
 }

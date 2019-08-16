@@ -1,6 +1,6 @@
 /*-
  * #%L
- * Extended authenticators for Cloud Endpoints v2
+ * Extended authorizers for Cloud Endpoints v2
  * ---
  * Copyright (C) 2018 AODocs (Altirnao Inc)
  * ---
@@ -19,34 +19,42 @@
  */
 package com.aodocs.endpoints.auth.authenticator.logic;
 
-import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.api.server.spi.config.model.ApiMethodConfig;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
+import java.util.Arrays;
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
+import lombok.NonNull;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
+import com.aodocs.endpoints.auth.authenticator.Authorizer;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 /**
- * Requires any provided authenticator to authorize the user. Evaluates authenticators in provided order.
+ * Requires any provided authenticator to authorize the user. Evaluates authorizers in provided order.
  */
-public class DisjunctAuthenticator extends ExtendedAuthenticator {
+public final class DisjunctAuthenticator extends AbstractAuthorizer {
 
     @JsonProperty("or")
-    private final ImmutableList<ExtendedAuthenticator> authenticators;
+    private final ImmutableList<Authorizer> authorizers;
 
     @JsonCreator
-    public DisjunctAuthenticator(@NonNull ExtendedAuthenticator... authenticators) {
-        this.authenticators = ImmutableList.copyOf(authenticators);
+    public DisjunctAuthenticator(@NonNull Authorizer... authorizers) {
+        Preconditions.checkArgument(!Arrays.stream(authorizers).anyMatch(Objects::isNull), "Authorizer should be non-null");
+        this.authorizers = ImmutableList.copyOf(authorizers);
     }
 
     @Override
     public AuthorizationResult isAuthorized(final ExtendedUser extendedUser, final ApiMethodConfig methodConfig, final HttpServletRequest request) {
-        return new AuthorizationResult(authenticators.stream()
+        boolean authorized = authorizers.stream()
                 .map(input -> input.isAuthorized(extendedUser, methodConfig, request))
-                .anyMatch(AuthorizationResult::isAuthorized));
+                .anyMatch(AuthorizationResult::isAuthorized);
+        return newResultBuilder().authorized(authorized).build();
     }
 
 }

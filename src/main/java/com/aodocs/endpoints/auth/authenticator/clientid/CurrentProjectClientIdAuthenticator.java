@@ -19,22 +19,19 @@
  */
 package com.aodocs.endpoints.auth.authenticator.clientid;
 
-import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authenticator.ExtendedAuthenticator;
-import com.aodocs.endpoints.context.ProjectConfigProvider;
-import com.google.api.server.spi.config.Singleton;
-import com.google.api.server.spi.config.model.ApiMethodConfig;
-
 import javax.servlet.http.HttpServletRequest;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authenticator.AbstractAuthorizer;
+import com.aodocs.endpoints.context.ProjectConfigProvider;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
  * This authenticator allows any token issued by client ids from the current project (including service accounts).
  */
-@Singleton
-public class CurrentProjectClientIdAuthenticator extends ExtendedAuthenticator {
+public final class CurrentProjectClientIdAuthenticator extends AbstractAuthorizer {
 
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return new AuthorizationResult(ProjectConfigProvider.get().isProjectClientId(extendedUser.getAuthInfo().getClientId()));
+        return newResultBuilder().authorized(ProjectConfigProvider.get().isProjectClientId(extendedUser.getAuthInfo().getClientId())).build();
     }
-
 }
