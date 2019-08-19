@@ -36,23 +36,12 @@ import lombok.SneakyThrows;
 import java.util.Collections;
 import java.util.Map;
 
-/**
- * TODO
- * @param <T>
- */
-public class DslDeserializer<T> extends StdDeserializer<T> {
+class DslDeserializer<T> extends StdDeserializer<T> {
 
-    /**
-     * TODO
-     */
     private final Map<String, Class<? extends T>> classByDiscriminatorProperty;
-    /**
-     * TODO
-     */
+   
     private final Map<String, Class<? extends T>> singletonClassByName;
-    /**
-     * TODO
-     */
+   
     private final Class<? extends T> arrayType;
 
     /**
