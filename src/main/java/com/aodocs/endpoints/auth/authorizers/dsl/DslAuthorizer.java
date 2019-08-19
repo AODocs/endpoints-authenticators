@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableList;
  * TODO: describe the DSL
  **
  */
-public class DslAuthenticator extends AbstractAuthorizer {
+public class DslAuthorizer extends AbstractAuthorizer {
 
     public enum Format {
         YAML(new YAMLMapper()
@@ -66,20 +66,20 @@ public class DslAuthenticator extends AbstractAuthorizer {
     }
 
     private static final List<Module> MODULES = ImmutableList.of(
-            DslAuthenticatorConfig.MODULE,
+            DslAuthorizerConfig.MODULE,
             new GuavaModule(),
             new ParameterNamesModule(JsonCreator.Mode.PROPERTIES)
     );
 
     private final Authorizer delegate;
 
-    public DslAuthenticator(String dslConfig, Format format) throws IOException {
+    public DslAuthorizer(String dslConfig, Format format) throws IOException {
         this(format.reader().forType(Authorizer.class).readValue(dslConfig));
     }
 
     @VisibleForTesting
-    DslAuthenticator(Authorizer delegate) {
-        this.delegate = delegate instanceof DslAuthenticator ? ((DslAuthenticator) delegate).delegate : delegate;
+    DslAuthorizer(Authorizer delegate) {
+        this.delegate = delegate instanceof DslAuthorizer ? ((DslAuthorizer) delegate).delegate : delegate;
     }
 
     public String toString(Format format) throws JsonProcessingException {

@@ -17,23 +17,32 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.token;
+package com.aodocs.endpoints.auth.authorizers.role;
 
+import java.util.Optional;
+
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 
-import com.aodocs.endpoints.auth.AuthType;
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
-import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthenticator;
+import com.aodocs.endpoints.context.ProjectConfigProvider;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
+import com.google.common.collect.ImmutableSet;
 
 /**
- * Only allows JWT tokens. Should be used with {@link ConjunctAuthenticator}
+ * Only authorizes project members.
+ * Must be subclassed to implement authorized roles / role combination.
  */
-public final class JwtOnlyAuthenticator extends AbstractAuthorizer {
+public abstract class ProjectRolesAuthorizer extends AbstractAuthorizer {
 
     @Override
-    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.JWT).build();
+    public final AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
+        ImmutableSet<String> userRoles =
+                ProjectConfigProvider.get().getCachedProjectConfig().getRolesFor(extendedUser.getEmail());
+        return newResultBuilder().authorized(authorizeRoles(Optional.ofNullable(userRoles).orElse(ImmutableSet.of()))).build();
     }
+
+    protected abstract boolean authorizeRoles(@Nonnull ImmutableSet<String> userRoles);
+
 }

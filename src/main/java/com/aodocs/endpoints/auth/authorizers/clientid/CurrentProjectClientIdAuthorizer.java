@@ -17,24 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.config;
+package com.aodocs.endpoints.auth.authorizers.clientid;
 
 import javax.servlet.http.HttpServletRequest;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.aodocs.endpoints.context.ProjectConfigProvider;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * Authorizes request based on API version. Can be useful to deny access to beta versions.
+ * This authenticator allows any token issued by client ids from the current project (including service accounts).
  */
-abstract class VersionAuthenticator extends AbstractAuthorizer {
-   
-    @Override
-    public final AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        //version is a standard metric, no need to add it
-        return newResultBuilder().authorized(isAuthorized(apiMethodConfig.getApiClassConfig().getApiConfig().getVersion())).build();
-    }
+public final class CurrentProjectClientIdAuthorizer extends AbstractAuthorizer {
 
-    protected abstract boolean isAuthorized(String version);
+    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
+        return newResultBuilder().authorized(ProjectConfigProvider.get().isProjectClientId(extendedUser.getAuthInfo().getClientId())).build();
+    }
 }

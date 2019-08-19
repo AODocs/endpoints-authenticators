@@ -35,11 +35,11 @@ import com.google.api.server.spi.config.model.ApiMethodConfig;
  * This authenticator allows any token issued by the provided list of project numbers (digit-only id).
  * Does not support service accounts !! Only web client ids from other projects can be identified.
  */
-public final class ProjectsAuthenticator extends AbstractAuthorizer {
+public final class ProjectsAuthorizer extends AbstractAuthorizer {
 
     private final StringListSupplier projectNumberSupplier;
 
-    public ProjectsAuthenticator(@NonNull StringListSupplier projectNumberSupplier) {
+    public ProjectsAuthorizer(@NonNull StringListSupplier projectNumberSupplier) {
         this.projectNumberSupplier = projectNumberSupplier;
     }
 

@@ -17,10 +17,22 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.dsl;
+package com.aodocs.endpoints.auth.authorizers.token;
 
-public class DslAuthenticatorConfigTest {
+import javax.servlet.http.HttpServletRequest;
 
-    //TODO check no name clash with discriminator properties and others
+import com.aodocs.endpoints.auth.AuthType;
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
+/**
+ * Only allows Oauth2 tokens.
+ */
+public final class OAuth2OnlyAuthorizer extends AbstractAuthorizer {
+
+    @Override
+    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.OAUTH2).build();
+    }
 }

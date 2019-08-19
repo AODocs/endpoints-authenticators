@@ -17,34 +17,38 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.logic;
+package com.aodocs.endpoints.auth.authorizers.combined;
+
+
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.not;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.requiredQueryParamValue;
 
 import javax.servlet.http.HttpServletRequest;
 
-import lombok.NonNull;
-
 import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthorizer;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * Negates the provided authorizer result.
+ * Authenticator that checks API key, with both whitelist and blacklist.
+ * Must be subclassed or used in another authenticator.
  */
-public final class NegateAuthenticator extends AbstractAuthorizer {
+public class ApiKeyAuthorizer implements Authorizer {
+    
+    private final Authorizer delegate;
+    
 
-    @JsonProperty("not")
-    private final Authorizer authorizer;
-
-    @JsonCreator
-    public NegateAuthenticator(@NonNull @JsonProperty("not") Authorizer authenticator) {
-        this.authorizer = authenticator;
+    protected ApiKeyAuthorizer(CombinedStringListBuilder slb, Authorizer authenticator) {
+        delegate = new ConjunctAuthorizer(
+                requiredQueryParamValue("key", slb.whitelist("apiKeys")),
+                not(requiredQueryParamValue("key", slb.blacklist("apiKeys"))),
+                authenticator
+        );
     }
-
+    
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(!authorizer.isAuthorized(extendedUser, apiMethodConfig, request).isAuthorized()).build();
+        return delegate.isAuthorized(extendedUser, apiMethodConfig, request);
     }
 }

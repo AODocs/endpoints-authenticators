@@ -36,15 +36,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Requires any provided authenticator to authorize the user. Evaluates authorizers in provided order.
+ * Requires all provided authorizers to authorize the user.
  */
-public final class DisjunctAuthenticator extends AbstractAuthorizer {
+public final class ConjunctAuthorizer extends AbstractAuthorizer {
 
-    @JsonProperty("or")
+    @JsonProperty("and")
     private final ImmutableList<Authorizer> authorizers;
 
     @JsonCreator
-    public DisjunctAuthenticator(@NonNull Authorizer... authorizers) {
+    public ConjunctAuthorizer(@NonNull Authorizer... authorizers) {
         Preconditions.checkArgument(!Arrays.stream(authorizers).anyMatch(Objects::isNull), "Authorizer should be non-null");
         this.authorizers = ImmutableList.copyOf(authorizers);
     }
@@ -53,8 +53,7 @@ public final class DisjunctAuthenticator extends AbstractAuthorizer {
     public AuthorizationResult isAuthorized(final ExtendedUser extendedUser, final ApiMethodConfig methodConfig, final HttpServletRequest request) {
         boolean authorized = authorizers.stream()
                 .map(input -> input.isAuthorized(extendedUser, methodConfig, request))
-                .anyMatch(AuthorizationResult::isAuthorized);
+                .allMatch(AuthorizationResult::isAuthorized);
         return newResultBuilder().authorized(authorized).build();
     }
-
 }

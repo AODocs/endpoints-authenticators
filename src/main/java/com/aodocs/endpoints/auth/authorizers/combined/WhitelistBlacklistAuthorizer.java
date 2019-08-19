@@ -19,17 +19,17 @@
  */
 package com.aodocs.endpoints.auth.authorizers.combined;
 
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.clientIds;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.currentProjectClientId;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.not;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.or;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.projects;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.clientIds;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.currentProjectClientId;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.not;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.or;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.projects;
 
 import javax.servlet.http.HttpServletRequest;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
-import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthorizer;
 import com.google.api.server.spi.config.Singleton;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
@@ -48,16 +48,16 @@ import com.google.api.server.spi.config.model.ApiMethodConfig;
  * A client ID must be in the allowed list AND NOT in the denied list.
  */
 @Singleton
-public class WhitelistBlacklistAuthenticator implements Authorizer {
+public class WhitelistBlacklistAuthorizer implements Authorizer {
 
     private final Authorizer delegate;
   
-    public WhitelistBlacklistAuthenticator() {
+    public WhitelistBlacklistAuthorizer() {
         this(new CombinedStringListBuilder());
     }
 
-    public WhitelistBlacklistAuthenticator(CombinedStringListBuilder slb) {
-        delegate = new ConjunctAuthenticator(
+    public WhitelistBlacklistAuthorizer(CombinedStringListBuilder slb) {
+        delegate = new ConjunctAuthorizer(
                 or(
                         currentProjectClientId(),
                         clientIds(slb.whitelist("clientIds")),

@@ -19,23 +19,22 @@
  */
 package com.aodocs.endpoints.auth.authorizers.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.servlet.http.HttpServletRequest;
+
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * API version must contain a string
+ * Authorizes request based on API version. Can be useful to deny access to beta versions.
  */
-
-public final class VersionContainsAuthenticator extends VersionAuthenticator {
-
-    @JsonProperty
-    private final String versionContains;
-
-    public VersionContainsAuthenticator(@JsonProperty("versionContains") String versionContains) {
-        this.versionContains = versionContains;
-    }
-
+abstract class VersionAuthorizer extends AbstractAuthorizer {
+   
     @Override
-    protected boolean isAuthorized(String version) {
-        return version.contains(versionContains);
+    public final AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+        //version is a standard metric, no need to add it
+        return newResultBuilder().authorized(isAuthorized(apiMethodConfig.getApiClassConfig().getApiConfig().getVersion())).build();
     }
+
+    protected abstract boolean isAuthorized(String version);
 }

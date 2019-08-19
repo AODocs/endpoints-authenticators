@@ -17,20 +17,24 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.role;
+package com.aodocs.endpoints.auth.authorizers.config;
 
-import javax.annotation.Nonnull;
-
-import com.google.common.collect.ImmutableSet;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Only authorizes project members (any role is authorized).
+ * API version must match a regex
  */
-public final class ProjectMemberAuthenticator extends ProjectRolesAuthenticator {
+public final class VersionMatchesAuthorizer extends VersionAuthorizer {
 
-    @Override
-    protected boolean authorizeRoles(@Nonnull ImmutableSet<String> userRoles) {
-        return !userRoles.isEmpty();
+    @JsonProperty
+    private final String versionMatches;
+
+    public VersionMatchesAuthorizer(@JsonProperty("versionMatches") String versionMatches) {
+        this.versionMatches = versionMatches;
     }
 
+    @Override
+    protected boolean isAuthorized(String version) {
+        return version.matches(versionMatches);
+    }
 }

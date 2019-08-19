@@ -19,16 +19,14 @@
  */
 package com.aodocs.endpoints.auth.authorizers.combined;
 
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.and;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.not;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.or;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.versionContains;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.*;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.versionContains;
 
 import javax.servlet.http.HttpServletRequest;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
-import com.aodocs.endpoints.auth.authorizers.logic.DisjunctAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.logic.DisjunctAuthorizer;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
@@ -36,32 +34,32 @@ import com.google.api.server.spi.config.model.ApiMethodConfig;
  * Can be useful to restrict usage of beta / internal API versions.
  * Must be subclassed or used in another authenticator.
  */
-public class RestrictedVersionAuthenticator implements Authorizer {
+public class RestrictedVersionAuthorizer implements Authorizer {
     
-    public static RestrictedVersionAuthenticator beta(
-            Authorizer defaultAuthenticator, Authorizer betaAuthenticator) {
-        return new RestrictedVersionAuthenticator(defaultAuthenticator, "beta", betaAuthenticator, true);
+    public static RestrictedVersionAuthorizer beta(
+            Authorizer defaultAuthorizer, Authorizer betaAuthorizer) {
+        return new RestrictedVersionAuthorizer(defaultAuthorizer, "beta", betaAuthorizer, true);
     }
 
-    public static RestrictedVersionAuthenticator internal(
-            Authorizer defaultAuthenticator, Authorizer betaAuthenticator) {
-        return new RestrictedVersionAuthenticator(defaultAuthenticator, "internal", betaAuthenticator, true);
+    public static RestrictedVersionAuthorizer internal(
+            Authorizer defaultAuthorizer, Authorizer betaAuthorizer) {
+        return new RestrictedVersionAuthorizer(defaultAuthorizer, "internal", betaAuthorizer, true);
     }
     
     private final Authorizer delegate;
 
-    public RestrictedVersionAuthenticator(Authorizer defaultAuthenticator,
-                                          String ifVersionContains, Authorizer specificAuthenticator, boolean includeSpecificInDefault) {
-        delegate = new DisjunctAuthenticator(
+    public RestrictedVersionAuthorizer(Authorizer defaultAuthorizer,
+                                          String ifVersionContains, Authorizer specificAuthorizer, boolean includeSpecificInDefault) {
+        delegate = new DisjunctAuthorizer(
                 and(
                         not(versionContains(ifVersionContains)),
                         includeSpecificInDefault
-                                ? or(defaultAuthenticator, specificAuthenticator)
-                                : defaultAuthenticator
+                                ? or(defaultAuthorizer, specificAuthorizer)
+                                : defaultAuthorizer
                 ),
                 and(
                         versionContains(ifVersionContains),
-                        specificAuthenticator
+                        specificAuthorizer
                 )
         );
     }

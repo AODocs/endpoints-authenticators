@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.request;
+package com.aodocs.endpoints.auth.authorizers.clientid;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,31 +25,25 @@ import lombok.NonNull;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.aodocs.endpoints.storage.StringListSupplier;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-import com.google.common.base.CharMatcher;
 
 /**
- * This authenticators allows any request with the provided path prefix.
+ * This authenticator allows any token issued by a client id in the provided list.
  */
-public final class PathPrefixAuthenticator extends AbstractAuthorizer {
+public final class ClientIdsAuthorizer extends AbstractAuthorizer {
 
-    private static final CharMatcher NORMALIZER = CharMatcher.is('/');
+    @JsonProperty("clientIds")
+    private final StringListSupplier clientIdSupplier;
 
-    @JsonProperty
-    private final String pathPrefix;
-
-    public PathPrefixAuthenticator(@JsonProperty("pathPrefix") @NonNull String pathPrefix) {
-        this.pathPrefix = pathPrefix;
+    @JsonCreator
+    public ClientIdsAuthorizer(@NonNull StringListSupplier clientIdSupplier) {
+        this.clientIdSupplier = clientIdSupplier;
     }
 
-    @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(normalize(request.getPathInfo()).startsWith(normalize(pathPrefix))).build();
+        return newResultBuilder().authorized(clientIdSupplier.get().contains(extendedUser.getAuthInfo().getClientId())).build();
     }
-
-    private String normalize(String path) {
-        return NORMALIZER.trimAndCollapseFrom(path, '/');
-    }
-
 }

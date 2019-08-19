@@ -1,6 +1,6 @@
 /*-
  * #%L
- * Extended authenticators for Cloud Endpoints v2
+ * Extended Authorizers for Cloud Endpoints v2
  * ---
  * Copyright (C) 2018 AODocs (Altirnao Inc)
  * ---
@@ -23,18 +23,18 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
-import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.clientid.CurrentProjectClientIdAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.config.VersionContainsAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.config.VersionMatchesAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.logic.DisjunctAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.logic.NegateAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.role.ProjectMemberAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.role.ProjectOwnerAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.token.JwtOnlyAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.token.OAuth2OnlyAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.clientid.CurrentProjectClientIdAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.config.VersionContainsAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.config.VersionMatchesAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.logic.DisjunctAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.logic.NegateAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.role.ProjectMemberAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.role.ProjectOwnerAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.token.JwtOnlyAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.token.OAuth2OnlyAuthorizer;
 import com.aodocs.endpoints.storage.ClasspathStringListSupplier;
 import com.aodocs.endpoints.storage.CloudStorageStringListSupplier;
 import com.aodocs.endpoints.storage.DatastoreStringListSupplier;
@@ -48,15 +48,15 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * This class provides a Jackson modules that will be able to serialize / deserialize complex authenticator configs
- * with a simple DSL, either in JSON or YAML. It handles the poymorphic de/serialization of ExtendedAuthenticator and
+ * This class provides a Jackson modules that will be able to serialize / deserialize complex Authorizer configs
+ * with a simple DSL, either in JSON or YAML. It handles the poymorphic de/serialization of ExtendedAuthorizer and
  * StringListSupplier instances, without the usual Jackson "tricks" to provide typing information.
  *
  * It handles three types of polymorphic abjects:
  * - "classic" objects (object with properties): these must be serializable and deserializable by Jackson.
  * Immutability is recommended (using @JsonCreator). They must also have a "discriminating" property, i.e. a property
  * whose name is unique amongst all the type hierarchy.
- * - "singleton" objects (annotated with @Singleton as a hint for Cloud Endpoints): this type of authenticators
+ * - "singleton" objects (annotated with @Singleton as a hint for Cloud Endpoints): this type of Authorizers
  * will be serialized to a simple string in the DSL, so they don't need to be serializable (and are not be by default as
  * they have no property). Obviously, the JSON name of the singleton must be unique amongst the type hierarchy.
  * - "array"  object: a unique type is allowed to be deserialized directly as an array. It must be unique because an
@@ -64,44 +64,44 @@ import com.google.common.collect.ImmutableMap;
  * <p>
  * This module is necessary to work around two limitation of Jackson:
  * - Type cannot be inferred on the presence of a specific property when performing polymorphic deserialization (used
- * for "classic" authenticators)
+ * for "classic" Authorizers)
  * - Polymorphic de/serialization does not allow to serialize objects to something else than a JSON object without a
  * custom serializer. We want to handle strings and arrays as well.
  * *
  * TODO make this extensible by third parties.
  */
-public interface DslAuthenticatorConfig {
+public interface DslAuthorizerConfig {
 
 
     /**
-     * ExtendedAuthenticators represented as objects in the DSL, determined by a discriminator property.
+     * ExtendedAuthorizers represented as objects in the DSL, determined by a discriminator property.
      */
-    ImmutableMap<String, Class<? extends Authorizer>> DISCRIMINATOR_PROPERTY_AUTHENTICATORS
+    ImmutableMap<String, Class<? extends Authorizer>> DISCRIMINATOR_PROPERTY_AuthorizerS
             = ImmutableMap.<String, Class<? extends Authorizer>>builder()
-            .put("and", ConjunctAuthenticator.class) //alias to all?
-            .put("or", DisjunctAuthenticator.class) //alias to any?
-            .put("not", NegateAuthenticator.class)
-            .put("versionMatches", VersionMatchesAuthenticator.class)
-            .put("versionContains", VersionContainsAuthenticator.class)
-            .put("httpMethod", HttpMethodAuthenticator.class)
-            .put("clientIds", ClientIdsAuthenticator.class)
+            .put("and", ConjunctAuthorizer.class) //alias to all?
+            .put("or", DisjunctAuthorizer.class) //alias to any?
+            .put("not", NegateAuthorizer.class)
+            .put("versionMatches", VersionMatchesAuthorizer.class)
+            .put("versionContains", VersionContainsAuthorizer.class)
+            .put("httpMethod", HttpMethodAuthorizer.class)
+            .put("clientIds", ClientIdsAuthorizer.class)
             .build();
 
     /**
-     * ExtendedAuthenticators represented as strings in the DSL, determined by their name.
+     * ExtendedAuthorizers represented as strings in the DSL, determined by their name.
      */
-    Map<String, Class<? extends Authorizer>> SINGLETON_AUTHENTICATORS
+    Map<String, Class<? extends Authorizer>> SINGLETON_AuthorizerS
             = ImmutableMap.<String, Class<? extends Authorizer>>builder()
-            .put("jwt", JwtOnlyAuthenticator.class)  //alias to idToken?
-            .put("oauth2", OAuth2OnlyAuthenticator.class)  //alias to accessToken?
-            .put("currentProjectClientId", CurrentProjectClientIdAuthenticator.class)
-            .put("projectMember", ProjectMemberAuthenticator.class)
-            .put("projectOwner", ProjectOwnerAuthenticator.class)
+            .put("jwt", JwtOnlyAuthorizer.class)  //alias to idToken?
+            .put("oauth2", OAuth2OnlyAuthorizer.class)  //alias to accessToken?
+            .put("currentProjectClientId", CurrentProjectClientIdAuthorizer.class)
+            .put("projectMember", ProjectMemberAuthorizer.class)
+            .put("projectOwner", ProjectOwnerAuthorizer.class)
             .build();
 
-    DslDeserializer<Authorizer> AUTHENTICATOR_DESERIALIZER
+    DslDeserializer<Authorizer> Authorizer_DESERIALIZER
             = new DslDeserializer<>(Authorizer.class,
-            DISCRIMINATOR_PROPERTY_AUTHENTICATORS, SINGLETON_AUTHENTICATORS);
+            DISCRIMINATOR_PROPERTY_AuthorizerS, SINGLETON_AuthorizerS);
 
     /**
      * StringListSuppliers represented as objects in the DSL, determined by a discriminator property.
@@ -124,9 +124,9 @@ public interface DslAuthenticatorConfig {
 
     static SimpleModule buildModule() {
         final SimpleModule module = new SimpleModule()
-                .addDeserializer(Authorizer.class, AUTHENTICATOR_DESERIALIZER)
+                .addDeserializer(Authorizer.class, Authorizer_DESERIALIZER)
                 .addDeserializer(StringListSupplier.class, STRING_SUPPLIER_DESERIALIZER);
-        SINGLETON_AUTHENTICATORS.forEach((stringValue, singletonClass) ->
+        SINGLETON_AuthorizerS.forEach((stringValue, singletonClass) ->
                 module.addSerializer(singletonClass, getSingletonSerializer(stringValue)));
         return module;
     }

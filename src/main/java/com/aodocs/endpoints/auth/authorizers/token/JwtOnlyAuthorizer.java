@@ -17,20 +17,22 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.role;
+package com.aodocs.endpoints.auth.authorizers.token;
 
-import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
 
-import com.google.common.collect.ImmutableSet;
+import com.aodocs.endpoints.auth.AuthType;
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * Only authorizes project owners.
+ * Only allows JWT tokens.
  */
-public final class ProjectOwnerAuthenticator extends ProjectRolesAuthenticator {
+public final class JwtOnlyAuthorizer extends AbstractAuthorizer {
 
     @Override
-    protected boolean authorizeRoles(@Nonnull ImmutableSet<String> userRoles) {
-        return userRoles.contains("owner");
+    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.JWT).build();
     }
-
 }

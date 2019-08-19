@@ -17,21 +17,37 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.clientid;
+package com.aodocs.endpoints.auth.authorizers.request;
 
 import javax.servlet.http.HttpServletRequest;
 
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
-import com.aodocs.endpoints.context.ProjectConfigProvider;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * This authenticator allows any token issued by client ids from the current project (including service accounts).
+ * This authenticators allows only the provided HTTP method
  */
-public final class CurrentProjectClientIdAuthenticator extends AbstractAuthorizer {
+public final class HttpMethodAuthorizer extends AbstractAuthorizer {
 
+    public enum HttpMethod {
+        DELETE, GET, POST, PUT, PATCH;
+        //OPTIONS is used for CORS only
+        //HEAD is not supported by Endpoints
+    }
+
+    @JsonProperty
+    private final HttpMethod httpMethod;
+
+    public HttpMethodAuthorizer(@JsonProperty("httpMethod") @NonNull HttpMethod httpMethod) {
+        this.httpMethod = httpMethod;
+    }
+
+    @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(ProjectConfigProvider.get().isProjectClientId(extendedUser.getAuthInfo().getClientId())).build();
+        return newResultBuilder().authorized(methodConfig.getHttpMethod().equalsIgnoreCase(httpMethod.name())).build();
     }
 }

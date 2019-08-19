@@ -22,19 +22,20 @@ package com.aodocs.endpoints.auth.authorizers.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * API version must match a regex
+ * API version must contain a string
  */
-public final class VersionMatchesAuthenticator extends VersionAuthenticator {
+
+public final class VersionContainsAuthorizer extends VersionAuthorizer {
 
     @JsonProperty
-    private final String versionMatches;
+    private final String versionContains;
 
-    public VersionMatchesAuthenticator(@JsonProperty("versionMatches") String versionMatches) {
-        this.versionMatches = versionMatches;
+    public VersionContainsAuthorizer(@JsonProperty("versionContains") String versionContains) {
+        this.versionContains = versionContains;
     }
 
     @Override
     protected boolean isAuthorized(String version) {
-        return version.matches(versionMatches);
+        return version.contains(versionContains);
     }
 }

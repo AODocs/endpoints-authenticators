@@ -19,9 +19,10 @@
  */
 package com.aodocs.endpoints.auth.authorizers.dsl;
 
-import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthenticator;
-import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthenticator;
+import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthorizer;
 import com.aodocs.endpoints.storage.*;
+import com.google.api.server.spi.Client;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -35,21 +36,27 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.*;
-import static com.aodocs.endpoints.auth.authorizers.dsl.DslAuthenticator.Format.JSON;
-import static com.aodocs.endpoints.auth.authorizers.dsl.DslAuthenticator.Format.YAML;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.and;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.clientIds;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.httpMethod;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.jwt;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.not;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.versionContains;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.versionMatches;
+import static com.aodocs.endpoints.auth.authorizers.dsl.DslAuthorizer.Format.JSON;
+import static com.aodocs.endpoints.auth.authorizers.dsl.DslAuthorizer.Format.YAML;
 import static org.junit.Assert.assertEquals;
 
-public class DslAuthenticatorTest {
+public class DslAuthorizerTest {
 
-    private static final DslAuthenticator TEST_AUTHENTICATOR = new DslAuthenticator(and(
+    private static final DslAuthorizer TEST_AUTHENTICATOR = new DslAuthorizer(and(
             jwt(),
-            httpMethod(HttpMethodAuthenticator.HttpMethod.GET),
+            httpMethod(HttpMethodAuthorizer.HttpMethod.GET),
             not(versionContains("beta")),
             versionMatches("prod"),
             clientIds(new DatastoreStringListSupplier("A", 60))
     ));
-    private static final Map<DslAuthenticator.Format, String> EXPECTED = ImmutableMap.of(
+    private static final Map<DslAuthorizer.Format, String> EXPECTED = ImmutableMap.of(
             JSON, "{\"and\":[\"jwt\",{\"httpMethod\":\"GET\"},{\"not\":{\"versionContains\":\"beta\"}},{\"versionMatches\":\"prod\"},{\"clientIds\":{\"ttlInSeconds\":60,\"datastoreEntity\":\"A\"}}]}",
             YAML, "and:\n" +
                     "- \"jwt\"\n" +
@@ -76,15 +83,15 @@ public class DslAuthenticatorTest {
 
     @Test
     public void testAuthenticatorsRoundtrip() throws IOException {
-        for (DslAuthenticator.Format format : DslAuthenticator.Format.values()) {
+        for (DslAuthorizer.Format format : DslAuthorizer.Format.values()) {
             roundtrip(format);
         }
     }
 
-    private void roundtrip(DslAuthenticator.Format format) throws IOException {
+    private void roundtrip(DslAuthorizer.Format format) throws IOException {
         final String asJson1 = TEST_AUTHENTICATOR.toString(format);
         assertEquals(EXPECTED.get(format), asJson1);
-        final DslAuthenticator deserialized = new DslAuthenticator(asJson1, format);
+        final DslAuthorizer deserialized = new DslAuthorizer(asJson1, format);
         final String asJson2 = deserialized.toString(format);
         assertEquals(asJson1, asJson2);
         System.out.println(asJson2);
@@ -106,9 +113,9 @@ public class DslAuthenticatorTest {
     }
 
     private void roundtrip(StringListSupplier supplier) throws IOException {
-        final ClientIdsAuthenticator object = new ClientIdsAuthenticator(supplier);
+        final ClientIdsAuthorizer object = new ClientIdsAuthorizer(supplier);
         final String asJson1 = JSON.writeValueAsString(object);
-        final ClientIdsAuthenticator deserialized = JSON.reader().forType(ClientIdsAuthenticator.class).readValue(asJson1);
+        final ClientIdsAuthorizer deserialized = JSON.reader().forType(ClientIdsAuthorizer.class).readValue(asJson1);
         final String asJson2 = JSON.writeValueAsString(deserialized);
         assertEquals(asJson1, asJson2);
         System.out.println(asJson2);

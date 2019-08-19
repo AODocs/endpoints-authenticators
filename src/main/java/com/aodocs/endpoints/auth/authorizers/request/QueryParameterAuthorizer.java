@@ -26,30 +26,23 @@ import lombok.NonNull;
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.client.util.Strings;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
-import com.google.common.base.CharMatcher;
 
 /**
- * This authenticators allows any method with the provided servlet path.
+ * This authenticator allows any request with a provided parameter, regardless of the value.
  */
-public final class ServletPathAuthenticator extends AbstractAuthorizer {
-
-    private static final CharMatcher NORMALIZER = CharMatcher.is('/');
+public final class QueryParameterAuthorizer extends AbstractAuthorizer {
 
     @JsonProperty
-    private final String servletPath;
+    private final String requiredQueryParam;
 
-    public ServletPathAuthenticator(@JsonProperty("servletPath") @NonNull String servletPath) {
-        this.servletPath = servletPath;
+    public QueryParameterAuthorizer(@NonNull String requiredQueryParam) {
+        this.requiredQueryParam = requiredQueryParam;
     }
 
     @Override
-    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(normalize(request.getServletPath()).equals(normalize(servletPath))).build();
+    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+        return newResultBuilder().authorized(!Strings.isNullOrEmpty(request.getParameter(requiredQueryParam))).build();
     }
-
-    private String normalize(String path) {
-        return NORMALIZER.trimAndCollapseFrom(path, '/');
-    }
-
 }

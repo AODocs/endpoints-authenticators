@@ -17,37 +17,34 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.combined;
-
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.not;
-import static com.aodocs.endpoints.auth.authenticator.AuthenticatorBuilder.requiredQueryParamValue;
+package com.aodocs.endpoints.auth.authorizers.logic;
 
 import javax.servlet.http.HttpServletRequest;
 
+import lombok.NonNull;
+
 import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
-import com.aodocs.endpoints.auth.authorizers.logic.ConjunctAuthenticator;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * Authenticator that checks API key, with both whitelist and blacklist.
- * Must be subclassed or used in another authenticator.
+ * Negates the provided authorizer result.
  */
-public class ApiKeyAuthenticator implements Authorizer {
-    
-    private final Authorizer delegate;
-    
+public final class NegateAuthorizer extends AbstractAuthorizer {
 
-    protected ApiKeyAuthenticator(CombinedStringListBuilder slb, Authorizer authenticator) {
-        delegate = new ConjunctAuthenticator(
-                requiredQueryParamValue("key", slb.whitelist("apiKeys")),
-                not(requiredQueryParamValue("key", slb.blacklist("apiKeys"))),
-                authenticator
-        );
+    @JsonProperty("not")
+    private final Authorizer authorizer;
+
+    @JsonCreator
+    public NegateAuthorizer(@NonNull @JsonProperty("not") Authorizer authenticator) {
+        this.authorizer = authenticator;
     }
-    
+
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return delegate.isAuthorized(extendedUser, apiMethodConfig, request);
+        return newResultBuilder().authorized(!authorizer.isAuthorized(extendedUser, apiMethodConfig, request).isAuthorized()).build();
     }
 }

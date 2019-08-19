@@ -27,27 +27,29 @@ import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
+import com.google.common.base.CharMatcher;
 
 /**
- * This authenticators allows only the provided HTTP method
+ * This authenticators allows any request with the provided path prefix.
  */
-public final class HttpMethodAuthenticator extends AbstractAuthorizer {
+public final class PathPrefixAuthorizer extends AbstractAuthorizer {
 
-    public enum HttpMethod {
-        DELETE, GET, POST, PUT, PATCH;
-        //OPTIONS is used for CORS only
-        //HEAD is not supported by Endpoints
-    }
+    private static final CharMatcher NORMALIZER = CharMatcher.is('/');
 
     @JsonProperty
-    private final HttpMethod httpMethod;
+    private final String pathPrefix;
 
-    public HttpMethodAuthenticator(@JsonProperty("httpMethod") @NonNull HttpMethod httpMethod) {
-        this.httpMethod = httpMethod;
+    public PathPrefixAuthorizer(@JsonProperty("pathPrefix") @NonNull String pathPrefix) {
+        this.pathPrefix = pathPrefix;
     }
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(methodConfig.getHttpMethod().equalsIgnoreCase(httpMethod.name())).build();
+        return newResultBuilder().authorized(normalize(request.getPathInfo()).startsWith(normalize(pathPrefix))).build();
     }
+
+    private String normalize(String path) {
+        return NORMALIZER.trimAndCollapseFrom(path, '/');
+    }
+
 }

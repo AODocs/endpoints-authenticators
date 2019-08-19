@@ -25,24 +25,35 @@ import lombok.NonNull;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.aodocs.endpoints.storage.StringListSupplier;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.api.client.util.Strings;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * This authenticator allows any request with a provided parameter, regardless of the value.
+ * This authenticator allows any request with a provided parameter paramName that has a value in the provided list.
+ * Can be used to implement custom whitelisting logic for the "key" parameter used in the API management
+ * features of Cloud Endpoints v2.
  */
-public final class QueryParameterAuthenticator extends AbstractAuthorizer {
+public final class QueryParameterValueAuthorizer extends AbstractAuthorizer {
 
     @JsonProperty
-    private final String requiredQueryParam;
+    private final String paramName;
+    @JsonProperty
+    private final boolean allowIfAbsent;
+    @JsonProperty("values")
+    private final StringListSupplier valuesSupplier;
 
-    public QueryParameterAuthenticator(@NonNull String requiredQueryParam) {
-        this.requiredQueryParam = requiredQueryParam;
+    public QueryParameterValueAuthorizer(@NonNull String paramName,
+                                            boolean allowIfAbsent,
+                                            @NonNull StringListSupplier valuesSupplier) {
+        this.paramName = paramName;
+        this.allowIfAbsent = allowIfAbsent;
+        this.valuesSupplier = valuesSupplier;
     }
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(!Strings.isNullOrEmpty(request.getParameter(requiredQueryParam))).build();
+        String parameter = request.getParameter(paramName);
+        return newResultBuilder().authorized(parameter == null ? allowIfAbsent : valuesSupplier.get().contains(parameter)).build();
     }
 }

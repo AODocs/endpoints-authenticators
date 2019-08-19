@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.clientid;
+package com.aodocs.endpoints.auth.authorizers.request;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,25 +25,31 @@ import lombok.NonNull;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
-import com.aodocs.endpoints.storage.StringListSupplier;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
+import com.google.common.base.CharMatcher;
 
 /**
- * This authenticator allows any token issued by a client id in the provided list.
+ * This authenticators allows any method with the provided servlet path.
  */
-public final class ClientIdsAuthenticator extends AbstractAuthorizer {
+public final class ServletPathAuthorizer extends AbstractAuthorizer {
 
-    @JsonProperty("clientIds")
-    private final StringListSupplier clientIdSupplier;
+    private static final CharMatcher NORMALIZER = CharMatcher.is('/');
 
-    @JsonCreator
-    public ClientIdsAuthenticator(@NonNull StringListSupplier clientIdSupplier) {
-        this.clientIdSupplier = clientIdSupplier;
+    @JsonProperty
+    private final String servletPath;
+
+    public ServletPathAuthorizer(@JsonProperty("servletPath") @NonNull String servletPath) {
+        this.servletPath = servletPath;
     }
 
+    @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(clientIdSupplier.get().contains(extendedUser.getAuthInfo().getClientId())).build();
+        return newResultBuilder().authorized(normalize(request.getServletPath()).equals(normalize(servletPath))).build();
     }
+
+    private String normalize(String path) {
+        return NORMALIZER.trimAndCollapseFrom(path, '/');
+    }
+
 }

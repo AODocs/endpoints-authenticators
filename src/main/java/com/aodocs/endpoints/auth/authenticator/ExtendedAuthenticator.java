@@ -23,7 +23,6 @@ import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 
-import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 
 import com.aodocs.endpoints.auth.AuthInfo;
@@ -31,6 +30,7 @@ import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.server.spi.ServiceException;
+import com.google.api.server.spi.auth.EndpointsAuthenticator;
 import com.google.api.server.spi.auth.GoogleAuth;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Authenticator;
@@ -42,6 +42,8 @@ import com.google.common.base.Preconditions;
 
 /**
  * Base class for all extended authenticators provided by this project.
+ *
+ * An extended authenticator provides mechanism to provide customizable logic for authorization once the user is authenticated.
  */
 @Log
 @Singleton
@@ -50,7 +52,11 @@ public class ExtendedAuthenticator implements Authenticator {
     private final Authenticator delegateAuthenticator;
     private final Authorizer authorizer;
 
-    ExtendedAuthenticator(Authenticator delegate, Authorizer authorizer) {
+    public ExtendedAuthenticator(Authorizer authorizer) {
+        this(new EndpointsAuthenticator(), authorizer);
+    }
+   
+    public ExtendedAuthenticator(Authenticator delegate, Authorizer authorizer) {
         this.delegateAuthenticator = delegate;
         this.authorizer = authorizer;
     }
@@ -92,11 +98,6 @@ public class ExtendedAuthenticator implements Authenticator {
             log.log(Level.SEVERE, "Cannot authenticate user with custom authenticator, returning standard User", e);
             return user;
         }
-    }
-
-    @SneakyThrows(ServiceException.class)
-    private User performPrimaryAuthentication(HttpServletRequest request) {
-        return delegateAuthenticator.authenticate(request);
     }
 
     private ExtendedUser getExtendedUser(AuthInfo authInfo, User basicUser) {
