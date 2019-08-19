@@ -22,12 +22,6 @@ package com.aodocs.endpoints.auth.authorizers.dsl;
 import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
-import lombok.experimental.Delegate;
-
-import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -38,24 +32,26 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.google.api.server.spi.config.model.ApiMethodConfig;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 /**
- * This authenticator builds a complex authenticator using a DSL.
+ * This factory builds a complex authenticator using a DSL.
  *
  * TODO: describe the DSL
  **
  */
-public class DslAuthorizer extends AbstractAuthorizer {
-
+public class DslAuthorizerFactory {
+    private static DslAuthorizerFactory INSTANCE = new DslAuthorizerFactory();
+    
+    public static DslAuthorizerFactory get() {
+        return INSTANCE;
+    }
+    
     public enum Format {
         YAML(new YAMLMapper()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)),
         JSON(new ObjectMapper());
 
-        @Delegate
         private final ObjectMapper objectMapper;
 
         Format(ObjectMapper objectMapper) {
@@ -71,24 +67,13 @@ public class DslAuthorizer extends AbstractAuthorizer {
             new ParameterNamesModule(JsonCreator.Mode.PROPERTIES)
     );
 
-    private final Authorizer delegate;
-
-    public DslAuthorizer(String dslConfig, Format format) throws IOException {
-        this(format.reader().forType(Authorizer.class).readValue(dslConfig));
+    public Authorizer build(String dslConfig, Format format) throws IOException {
+        return (format.objectMapper
+                .reader().forType(Authorizer.class)
+                .readValue(dslConfig));
     }
 
-    @VisibleForTesting
-    DslAuthorizer(Authorizer delegate) {
-        this.delegate = delegate instanceof DslAuthorizer ? ((DslAuthorizer) delegate).delegate : delegate;
+    public String toString(Authorizer authorizer, Format format) throws JsonProcessingException {
+        return format.objectMapper.writeValueAsString(authorizer);
     }
-
-    public String toString(Format format) throws JsonProcessingException {
-        return format.writeValueAsString(delegate);
-    }
-
-    @Override
-    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return delegate.isAuthorized(extendedUser, apiMethodConfig, request);
-    }
-
 }
