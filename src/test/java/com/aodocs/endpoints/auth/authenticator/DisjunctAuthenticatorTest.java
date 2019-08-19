@@ -34,81 +34,77 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
 public class DisjunctAuthenticatorTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Test
-    public void testAtLeastOneDelegateIsMandatory() {
-        expectedException.expect(NullPointerException.class);
-        new DisjunctAuthenticator(null);
-        testValidAuthenticatorCreation();
-
-    }
-
-    @Test
-    public void testValidAuthenticatorCreation() {
-        Authenticator delegate = mock(Authenticator.class);
-        new DisjunctAuthenticator(delegate);
-    }
-
-    @Test
-    public void testOneDelegateAuthenticatedTheUser() throws ServiceException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-
-        //Authenticator returning null
-        Authenticator first = mock(Authenticator.class);
-
-        Authenticator second = mock(Authenticator.class);
-        User user = new User("mail@mail.com");
-        when(second.authenticate(request)).thenReturn(user);
-
-        DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
-        User authenticatedUser = underTest.authenticate(request);
-        assertSame(user, authenticatedUser);
-    }
-
-    @Test
-    public void testThrowingException() throws ServiceException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-
-        //Authenticator throwing exception
-        Authenticator first = mock(Authenticator.class);
-        doThrow(ServiceUnavailableException.class)
-                .when(first)
-                .authenticate(request);
-
-        Authenticator second = mock(Authenticator.class);
-        User user = new User("mail@mail.com");
-        when(second.authenticate(request)).thenReturn(user);
-
-        DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
-        User authenticatedUser = underTest.authenticate(request);
-        assertSame(user, authenticatedUser);
-    }
-
-    @Test
-    public void testRethrowTheLatestException() throws ServiceException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-
-        //Authenticator throwing exception
-        Authenticator first = mock(Authenticator.class);
-        doThrow(ServiceUnavailableException.class)
-                .when(first)
-                .authenticate(request);
-
-        //Authenticator throwing exception
-        Authenticator second = mock(Authenticator.class);
-        ServiceUnavailableException toBeThrown = new ServiceUnavailableException("Message");
-        doThrow(toBeThrown)
-                .when(second)
-                .authenticate(request);
-
-        try {
-            DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
-            underTest.authenticate(request);
-            fail("Expect the exception:" + toBeThrown);
-        } catch (ServiceException e) {
-            assertSame(toBeThrown, e);
-        }
-    }
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
+	
+	@Test
+	public void testAtLeastOneDelegateIsMandatory() {
+		expectedException.expect(NullPointerException.class);
+		new DisjunctAuthenticator(null);
+		
+		//Valid
+		Authenticator delegate = mock(Authenticator.class);
+		new DisjunctAuthenticator(delegate);
+	}
+	
+	@Test
+	public void testOneDelegateAuthenticatedTheUser() throws ServiceException {
+		HttpServletRequest request = mock(HttpServletRequest.class);
+		
+		//Authenticator returning null
+		Authenticator first = mock(Authenticator.class);
+		
+		Authenticator second = mock(Authenticator.class);
+		User user = new User("mail@mail.com");
+		when(second.authenticate(request)).thenReturn(user);
+		
+		DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
+		User authenticatedUser = underTest.authenticate(request);
+		assertSame(user, authenticatedUser);
+	}
+	
+	@Test
+	public void testThrowingException() throws ServiceException {
+		HttpServletRequest request = mock(HttpServletRequest.class);
+		
+		//Authenticator throwing exception
+		Authenticator first = mock(Authenticator.class);
+		doThrow(ServiceUnavailableException.class)
+				.when(first)
+				.authenticate(request);
+		
+		Authenticator second = mock(Authenticator.class);
+		User user = new User("mail@mail.com");
+		when(second.authenticate(request)).thenReturn(user);
+		
+		DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
+		User authenticatedUser = underTest.authenticate(request);
+		assertSame(user, authenticatedUser);
+	}
+	
+	@Test
+	public void testRethrowTheLatestException() throws ServiceException {
+		HttpServletRequest request = mock(HttpServletRequest.class);
+		
+		//Authenticator throwing exception
+		Authenticator first = mock(Authenticator.class);
+		doThrow(ServiceUnavailableException.class)
+				.when(first)
+				.authenticate(request);
+		
+		//Authenticator throwing exception
+		Authenticator second = mock(Authenticator.class);
+		ServiceUnavailableException toBeThrown = new ServiceUnavailableException("Message");
+		doThrow(toBeThrown)
+				.when(second)
+				.authenticate(request);
+		
+		try {
+			DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
+			underTest.authenticate(request);
+			fail("Expect the exception:" + toBeThrown);
+		} catch (ServiceException e) {
+			assertSame(toBeThrown, e);
+		}
+	}
 }
