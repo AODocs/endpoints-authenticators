@@ -19,22 +19,7 @@
  */
 package com.aodocs.endpoints.auth.authorizers.dsl;
 
-import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
-import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthorizer;
-import com.aodocs.endpoints.storage.*;
-import com.google.api.server.spi.Client;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
-import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
-import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
-import com.google.common.collect.ImmutableMap;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
 
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.and;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.clientIds;
@@ -43,31 +28,38 @@ import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.jwt;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.not;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.versionContains;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.versionMatches;
-import static com.aodocs.endpoints.auth.authorizers.dsl.DslAuthorizer.Format.JSON;
-import static com.aodocs.endpoints.auth.authorizers.dsl.DslAuthorizer.Format.YAML;
-import static org.junit.Assert.assertEquals;
 
-public class DslAuthorizerTest {
+import java.io.IOException;
 
-    private static final DslAuthorizer TEST_AUTHENTICATOR = new DslAuthorizer(and(
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.aodocs.endpoints.auth.authorizers.Authorizer;
+import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthorizer;
+import com.aodocs.endpoints.storage.ClasspathStringListSupplier;
+import com.aodocs.endpoints.storage.CloudStorageStringListSupplier;
+import com.aodocs.endpoints.storage.DatastoreStringListSupplier;
+import com.aodocs.endpoints.storage.ExplicitStringListSupplier;
+import com.aodocs.endpoints.storage.MergingStringListSupplier;
+import com.aodocs.endpoints.storage.StringListSupplier;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
+import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
+
+public class DslAuthorizerFactoryTest {
+
+    private static final Authorizer TEST_AUTHENTICATOR = and(
             jwt(),
             httpMethod(HttpMethodAuthorizer.HttpMethod.GET),
             not(versionContains("beta")),
             versionMatches("prod"),
             clientIds(new DatastoreStringListSupplier("A", 60))
-    ));
-    private static final Map<DslAuthorizer.Format, String> EXPECTED = ImmutableMap.of(
-            JSON, "{\"and\":[\"jwt\",{\"httpMethod\":\"GET\"},{\"not\":{\"versionContains\":\"beta\"}},{\"versionMatches\":\"prod\"},{\"clientIds\":{\"ttlInSeconds\":60,\"datastoreEntity\":\"A\"}}]}",
-            YAML, "and:\n" +
-                    "- \"jwt\"\n" +
-                    "- httpMethod: \"GET\"\n" +
-                    "- not:\n" +
-                    "    versionContains: \"beta\"\n" +
-                    "- versionMatches: \"prod\"\n" +
-                    "- clientIds:\n" +
-                    "    ttlInSeconds: 60\n" +
-                    "    datastoreEntity: \"A\"\n");
-
+    );
+    
     private Storage storage = LocalStorageHelper.getOptions().getService();
 
     @Before
@@ -83,23 +75,12 @@ public class DslAuthorizerTest {
 
     @Test
     public void testAuthenticatorsRoundtrip() throws IOException {
-        for (DslAuthorizer.Format format : DslAuthorizer.Format.values()) {
-            roundtrip(format);
-        }
-    }
-
-    private void roundtrip(DslAuthorizer.Format format) throws IOException {
-        final String asJson1 = TEST_AUTHENTICATOR.toString(format);
-        assertEquals(EXPECTED.get(format), asJson1);
-        final DslAuthorizer deserialized = new DslAuthorizer(asJson1, format);
-        final String asJson2 = deserialized.toString(format);
-        assertEquals(asJson1, asJson2);
-        System.out.println(asJson2);
+        roundtripall(TEST_AUTHENTICATOR);
     }
 
     @Test
     public void testStringListSuppliersRoundtrip() throws IOException {
-        //TODO implment individual seriualization tests
+        //TODO implment individual serialization tests
         roundtrip(new ExplicitStringListSupplier("a", "b", "c"));
         roundtrip(new ClasspathStringListSupplier("list.txt", false));
         roundtrip(new DatastoreStringListSupplier("A", 60));
@@ -113,12 +94,24 @@ public class DslAuthorizerTest {
     }
 
     private void roundtrip(StringListSupplier supplier) throws IOException {
-        final ClientIdsAuthorizer object = new ClientIdsAuthorizer(supplier);
-        final String asJson1 = JSON.writeValueAsString(object);
-        final ClientIdsAuthorizer deserialized = JSON.reader().forType(ClientIdsAuthorizer.class).readValue(asJson1);
-        final String asJson2 = JSON.writeValueAsString(deserialized);
-        assertEquals(asJson1, asJson2);
-        System.out.println(asJson2);
+        final ClientIdsAuthorizer authorizer = new ClientIdsAuthorizer(supplier);
+        roundtripall(authorizer);
     }
-
+    
+    private void roundtripall(Authorizer authorizer) throws IOException {
+        for(DslAuthorizerFactory.Format format: DslAuthorizerFactory.Format.values()) {
+            roundtrip(authorizer, format);
+        }
+    }
+    
+    private void roundtrip(Authorizer authorizer, DslAuthorizerFactory.Format format) throws IOException {
+        DslAuthorizerFactory factory = DslAuthorizerFactory.get();
+        String serialized = factory.toString(authorizer, format);
+        System.err.println(format.name() + "==> " + serialized);
+        
+        Authorizer deserialized = factory.build(serialized, format);
+        String serialized1 = factory.toString(deserialized, format);
+    
+        assertEquals(serialized, serialized1);
+    }
 }

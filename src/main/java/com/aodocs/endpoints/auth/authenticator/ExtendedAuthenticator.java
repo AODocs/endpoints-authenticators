@@ -23,6 +23,7 @@ import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 
+import lombok.NonNull;
 import lombok.extern.java.Log;
 
 import com.aodocs.endpoints.auth.AuthInfo;
@@ -58,7 +59,7 @@ public class ExtendedAuthenticator implements Authenticator {
         this(new EndpointsAuthenticator(), authorizer);
     }
    
-    public ExtendedAuthenticator(Authenticator delegate, Authorizer authorizer) {
+    public ExtendedAuthenticator(@NonNull Authenticator delegate, @NonNull Authorizer authorizer) {
         this.delegateAuthenticator = delegate;
         this.authorizer = authorizer;
     }

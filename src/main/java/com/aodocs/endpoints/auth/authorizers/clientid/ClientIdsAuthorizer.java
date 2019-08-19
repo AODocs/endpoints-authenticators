@@ -21,6 +21,7 @@ package com.aodocs.endpoints.auth.authorizers.clientid;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.common.flogger.FluentLogger;
 import lombok.NonNull;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
@@ -30,10 +31,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 
+import java.util.List;
+
 /**
  * This authenticator allows any token issued by a client id in the provided list.
  */
 public final class ClientIdsAuthorizer extends AbstractAuthorizer {
+    private static FluentLogger logger = FluentLogger.forEnclosingClass();
 
     @JsonProperty("clientIds")
     private final StringListSupplier clientIdSupplier;
@@ -44,6 +48,10 @@ public final class ClientIdsAuthorizer extends AbstractAuthorizer {
     }
 
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
+        String clientId = extendedUser.getAuthInfo().getClientId();
+        List<String> allowedClientIds = clientIdSupplier.get();
+        logger.atSevere().log("ClientId=" + clientId + ", Allowed=" + allowedClientIds);
+
         return newResultBuilder().authorized(clientIdSupplier.get().contains(extendedUser.getAuthInfo().getClientId())).build();
     }
 }
