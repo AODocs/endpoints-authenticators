@@ -45,9 +45,7 @@ public final class ProjectsAuthorizer extends AbstractAuthorizer {
 
     public AuthorizationResult isAuthorized(final ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
         String projectNumber = ProjectConfigProvider.extractProjectNumber(extendedUser.getAuthInfo().getClientId());
-        List<String> projectNumbers = projectNumberSupplier.get();
-        
-        return newResultBuilder().authorized(projectNumbers != null && projectNumbers.contains(projectNumber)).build();
+        return newResultBuilder().authorized(projectNumber != null && projectNumberSupplier.get().contains(projectNumber)).build();
     }
 
 }

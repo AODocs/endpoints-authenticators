@@ -48,7 +48,9 @@ import com.google.common.base.Preconditions;
 @Log
 @Singleton
 public class ExtendedAuthenticator implements Authenticator {
-
+    
+    public static final String EXTENDED_USER_ATTR = "endpoints-authenticators:extendedUser";
+    
     private final Authenticator delegateAuthenticator;
     private final Authorizer authorizer;
 
@@ -81,6 +83,8 @@ public class ExtendedAuthenticator implements Authenticator {
         //Authorization
         try {
             ExtendedUser extendedUser = getExtendedUser(getAuthInfo(request), user);
+            request.setAttribute(EXTENDED_USER_ATTR, extendedUser);
+            
             ApiMethodConfig methodConfig = attribute.get(Attribute.API_METHOD_CONFIG);
             Authorizer.AuthorizationResult authorizationResult = authorizer.isAuthorized(extendedUser, methodConfig, request);
             
@@ -115,13 +119,15 @@ public class ExtendedAuthenticator implements Authenticator {
 
     @VisibleForTesting
     AuthInfo getAuthInfo(HttpServletRequest request) {
+        String token = GoogleAuth.getAuthToken(request);
+        
         //The user was authenticated with either one of the two.
         final GoogleAuth.TokenInfo tokenInfo = (GoogleAuth.TokenInfo) request.getAttribute(Attribute.TOKEN_INFO);
         if (tokenInfo != null) {
-            return new AuthInfo(tokenInfo);
+            return new AuthInfo(token, tokenInfo);
         }
     
         final GoogleIdToken tokenId = (GoogleIdToken) request.getAttribute(Attribute.ID_TOKEN);
-        return new AuthInfo(tokenId);
+        return new AuthInfo(token, tokenId);
     }
 }

@@ -40,6 +40,7 @@ import java.util.List;
 public class AuthInfo {
 
     private AuthType authType;
+    private String token;
     private String userId;
     private String email;
     private Boolean verifiedEmail;
@@ -49,8 +50,9 @@ public class AuthInfo {
     private ImmutableSet<String> scopes;
     private Long expiresInSeconds;
 
-    public AuthInfo(GoogleIdToken tokenInfo) {
+    public AuthInfo(String token, GoogleIdToken tokenInfo) {
         this.authType = AuthType.JWT;
+        this.token = token;
         this.userId = tokenInfo.getPayload().getSubject();
         this.email = tokenInfo.getPayload().getEmail();
         this.verifiedEmail = tokenInfo.getPayload().getEmailVerified();
@@ -61,8 +63,9 @@ public class AuthInfo {
         this.expiresInSeconds = tokenInfo.getPayload().getExpirationTimeSeconds();
     }
 
-    public AuthInfo(GoogleAuth.TokenInfo tokenInfo) {
+    public AuthInfo(String token, GoogleAuth.TokenInfo tokenInfo) {
         this.authType = AuthType.OAUTH2;
+        this.token = token;
         this.userId = tokenInfo.userId;
         this.email = tokenInfo.email;
         this.verifiedEmail = tokenInfo.verifiedEmail;

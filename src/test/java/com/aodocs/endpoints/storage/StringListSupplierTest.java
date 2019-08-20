@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,28 +19,24 @@
  */
 package com.aodocs.endpoints.storage;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.extern.java.Log;
+import static org.junit.Assert.*;
 
+import java.util.Collections;
 import java.util.List;
 
-/**
- * Provides an explicit list of values
- */
-@Log
-public class ExplicitStringListSupplier extends StaticStringListSupplier {
+import org.junit.Test;
 
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public ExplicitStringListSupplier(@NonNull String... values) {
-        super(ImmutableList.copyOf(values));
-    }
-
-    //Solely for deserialization
-    @JsonValue
-    public List<String> values() {
-        return super.get();
-    }
+public class StringListSupplierTest {
+  
+  @Test
+  public void testRawListIsNull() {
+    StringListSupplier rawIsNull = new StringListSupplier() {
+      @Override
+      protected List<String> getRaw() {
+        return null;
+      }
+    };
+    
+    assertEquals(Collections.emptyList(), rawIsNull.get());
+  }
 }
