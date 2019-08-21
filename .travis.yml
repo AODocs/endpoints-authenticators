@@ -1,19 +1,10 @@
 language: java
+jdk:
+  - openjdk8
+
 cache:
   directories:
-  - "$HOME/.m2"
-
-jdk:
-  - oraclejdk8
+    - "$HOME/.m2"
 
 after_success:
   - mvn --settings .travis/settings.xml --batch-mode -DskipTests install deploy
-
-deploy:
-  provider: script
-  script: mvn --settings .travis/settings.xml --batch-mode install deploy
-  on:
-    tags: true
-    jdk: oraclejdk8
-
-dist: trusty
