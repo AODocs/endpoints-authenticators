@@ -17,30 +17,10 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.storage;
+package com.aodocs.endpoints.auth.authorizers.dsl;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.extern.java.Log;
+public class DslAuthorizerConfigTest {
 
-import java.util.List;
+    //TODO check no name clash with discriminator properties and others
 
-/**
- * Provides an explicit list of values
- */
-@Log
-public class ExplicitStringListSupplier extends StaticStringListSupplier {
-
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public ExplicitStringListSupplier(@NonNull String... values) {
-        super(ImmutableList.copyOf(values));
-    }
-
-    //Solely for deserialization
-    @JsonValue
-    public List<String> values() {
-        return super.get();
-    }
 }

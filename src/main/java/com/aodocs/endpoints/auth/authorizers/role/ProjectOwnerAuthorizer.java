@@ -17,30 +17,20 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.storage;
+package com.aodocs.endpoints.auth.authorizers.role;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.extern.java.Log;
+import javax.annotation.Nonnull;
 
-import java.util.List;
+import com.google.common.collect.ImmutableSet;
 
 /**
- * Provides an explicit list of values
+ * Only authorizes project owners.
  */
-@Log
-public class ExplicitStringListSupplier extends StaticStringListSupplier {
+public final class ProjectOwnerAuthorizer extends ProjectRolesAuthorizer {
 
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public ExplicitStringListSupplier(@NonNull String... values) {
-        super(ImmutableList.copyOf(values));
+    @Override
+    protected boolean authorizeRoles(@Nonnull ImmutableSet<String> userRoles) {
+        return userRoles.contains("owner");
     }
 
-    //Solely for deserialization
-    @JsonValue
-    public List<String> values() {
-        return super.get();
-    }
 }

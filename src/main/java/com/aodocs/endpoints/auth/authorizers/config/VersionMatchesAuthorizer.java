@@ -17,30 +17,24 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.storage;
+package com.aodocs.endpoints.auth.authorizers.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.extern.java.Log;
-
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Provides an explicit list of values
+ * API version must match a regex
  */
-@Log
-public class ExplicitStringListSupplier extends StaticStringListSupplier {
+public final class VersionMatchesAuthorizer extends VersionAuthorizer {
 
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public ExplicitStringListSupplier(@NonNull String... values) {
-        super(ImmutableList.copyOf(values));
+    @JsonProperty
+    private final String versionMatches;
+
+    public VersionMatchesAuthorizer(@JsonProperty("versionMatches") String versionMatches) {
+        this.versionMatches = versionMatches;
     }
 
-    //Solely for deserialization
-    @JsonValue
-    public List<String> values() {
-        return super.get();
+    @Override
+    protected boolean isAuthorized(String version) {
+        return version.matches(versionMatches);
     }
 }

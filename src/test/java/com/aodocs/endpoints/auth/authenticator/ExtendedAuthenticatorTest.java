@@ -20,33 +20,35 @@
 package com.aodocs.endpoints.auth.authenticator;
 
 import com.aodocs.endpoints.auth.AuthInfo;
-import com.aodocs.endpoints.auth.AuthType;
 import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.google.api.server.spi.EnvUtil;
+import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
-import com.google.api.server.spi.config.Singleton;
+import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.api.server.spi.request.Attribute;
-import com.google.api.server.spi.response.ServiceUnavailableException;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.appengine.tools.development.testing.LocalURLFetchServiceTestConfig;
 import com.google.common.collect.ImmutableSet;
 import lombok.extern.java.Log;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.reflections.Reflections;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Set;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by Clement on 20/10/2016.
@@ -62,6 +64,12 @@ public class ExtendedAuthenticatorTest {
 
     private MockHttpServletRequest request;
     private Attribute attr;
+    
+    @Mock
+    Authenticator delegate;
+    
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -79,15 +87,14 @@ public class ExtendedAuthenticatorTest {
     }
 
     //mocks all required remote calls
-    public static abstract class TestAuthenticator extends ExtendedAuthenticator {
-
-        @Override
-        protected User performPrimaryAuthentication(HttpServletRequest request, AuthType authType) {
-            return new User("123456789", "dummyuser@gmail.com");
+    public static class TestAuthenticator extends ExtendedAuthenticator {
+        
+        TestAuthenticator(Authenticator delegate, Authorizer authorizer) {
+            super(delegate, authorizer);
         }
 
         @Override
-        AuthInfo getAuthInfo(AuthType authType, HttpServletRequest request, String token) {
+        AuthInfo getAuthInfo(HttpServletRequest request) {
             return createDummyAuthInfo("dummyuser@gmail.com", "12345", "scope1", "123456789");
         }
 
@@ -102,62 +109,57 @@ public class ExtendedAuthenticatorTest {
         }
     }
 
-    @Singleton
-    public static class PassAuthenticator extends TestAuthenticator {
+    static class PassthroughsAuthorizer extends AbstractAuthorizer {
         @Override
         public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-            return new AuthorizationResult(true);
+            return newResultBuilder().authorized(true).build();
         }
     }
-
-    @Singleton
-    public static class DenyAuthenticator extends TestAuthenticator {
+    
+    static class DenyAll extends AbstractAuthorizer {
+    
         @Override
         public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-            return new AuthorizationResult(false);
+            return newResultBuilder().authorized(false).build();
         }
     }
-
-    public static class NotSingletonAuthenticator extends ExtendedAuthenticator {
-        @Override
-        public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-            return new AuthorizationResult(true);
-        }
-    }
-
+    
     @Test
-    public void withoutHeader_thenNotPass() throws ServiceUnavailableException {
-        assertNull(new PassAuthenticator().authenticate(request));
+    public void notAuthenticated() throws ServiceException {
+        when(delegate.authenticate(request)).thenReturn(null);
+        TestAuthenticator authenticator = new TestAuthenticator(delegate, new PassthroughsAuthorizer());
+    
+        User user = authenticator.authenticate(request);
+        assertNull(user);
     }
-
+    
     @Test
-    public void withHeader_thenPass() throws ServiceUnavailableException {
-        request.addHeader("Authorization", "Bearer ya29.abcdefg");
-        assertNotNull(new PassAuthenticator().authenticate(request));
-        assertNull(new DenyAuthenticator().authenticate(request));
+    public void authenticationThrowsException_NotAuthenticated() throws ServiceException {
+        doThrow(ServiceException.class).when(delegate).authenticate(request);
+        
+        TestAuthenticator authenticator = new TestAuthenticator(delegate, new PassthroughsAuthorizer());
+        
+        thrown.expect(ServiceException.class);
+        authenticator.authenticate(request);
     }
-
-    @Test(expected = IllegalStateException.class)
-    public void notSingleton_thenFail() throws ServiceUnavailableException {
-        new NotSingletonAuthenticator().authenticate(request);
-    }
-
+    
     @Test
-    public void defaultConstructorAuthenticatotorsAreAllSingletons() {
-        Reflections reflections = new Reflections("com.aodocs.endpoints.auth.authenticator");
-        Set<Class<? extends ExtendedAuthenticator>> authenticatorTypes = reflections.getSubTypesOf(ExtendedAuthenticator.class);
-        for (Class<? extends ExtendedAuthenticator> authenticatorType : authenticatorTypes) {
-            if (Modifier.isAbstract(authenticatorType.getModifiers()) //do not check abstract classes
-                    || authenticatorType.getName().contains(getClass().getName())) //exclude current class' inner classes
-                continue;
-            try {
-                authenticatorType.getDeclaredConstructor();
-                log.info("Checking @Singleton presence on " + authenticatorType);
-                assertTrue(Arrays.stream(authenticatorType.getAnnotations()).anyMatch(input -> input.annotationType().getSimpleName().equals("Singleton")));
-            } catch (NoSuchMethodException e) {
-                log.info("No default constructor on " + authenticatorType);
-            }
-        }
+    public void notAuthorized() throws ServiceException {
+        User user = new User("123456789", "dummyuser@gmail.com");
+        when(delegate.authenticate(any(HttpServletRequest.class))).thenReturn(user);
+        TestAuthenticator authenticator = new TestAuthenticator(delegate, new DenyAll());
+    
+        User actual = authenticator.authenticate(request);
+        assertNull(actual);
     }
-
+    
+    @Test
+    public void authorized() throws ServiceException {
+        User user = new User("123456789", "dummyuser@gmail.com");
+        when(delegate.authenticate(any(HttpServletRequest.class))).thenReturn(user);
+        TestAuthenticator authenticator = new TestAuthenticator(delegate, new PassthroughsAuthorizer());
+    
+        User actual = authenticator.authenticate(request);
+        assertEquals(user, actual); //notice that assertEquals(actual, user) fails due to non-symmetric equals implementation of ExtendedUser
+    }
 }

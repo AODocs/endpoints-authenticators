@@ -17,30 +17,22 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.storage;
+package com.aodocs.endpoints.auth.authorizers.token;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.extern.java.Log;
+import javax.servlet.http.HttpServletRequest;
 
-import java.util.List;
+import com.aodocs.endpoints.auth.AuthType;
+import com.aodocs.endpoints.auth.ExtendedUser;
+import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
+import com.google.api.server.spi.config.model.ApiMethodConfig;
 
 /**
- * Provides an explicit list of values
+ * Only allows JWT tokens.
  */
-@Log
-public class ExplicitStringListSupplier extends StaticStringListSupplier {
+public final class JwtOnlyAuthorizer extends AbstractAuthorizer {
 
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public ExplicitStringListSupplier(@NonNull String... values) {
-        super(ImmutableList.copyOf(values));
-    }
-
-    //Solely for deserialization
-    @JsonValue
-    public List<String> values() {
-        return super.get();
+    @Override
+    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
+        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.JWT).build();
     }
 }

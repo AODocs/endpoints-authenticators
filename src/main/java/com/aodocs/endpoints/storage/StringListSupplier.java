@@ -19,6 +19,7 @@
  */
 package com.aodocs.endpoints.storage;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 public abstract class StringListSupplier implements Supplier<List<String>> {
 
     @Override
-    public List<String> get() {
+    public final List<String> get() {
         return clean(getRaw());
     }
 
@@ -43,6 +44,10 @@ public abstract class StringListSupplier implements Supplier<List<String>> {
      * @return
      */
     private List<String> clean(List<String> strings) {
+        if (strings == null) {
+            return Collections.emptyList();
+        }
+        
         return strings.stream().map(input -> {
             int commentIndex = input.indexOf("#");
             String noComment = commentIndex != -1 ? input.substring(0, commentIndex) : input;
