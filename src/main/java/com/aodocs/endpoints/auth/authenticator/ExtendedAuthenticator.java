@@ -69,9 +69,10 @@ public class ExtendedAuthenticator implements Authenticator {
 
         //disable client id checking, the whole point of this authenticator is to bypass it
         Attribute attribute = Attribute.from(request);
+        boolean clientIdWhitelistWasEnabled = attribute.isEnabled(Attribute.ENABLE_CLIENT_ID_WHITELIST);
         attribute.remove(Attribute.ENABLE_CLIENT_ID_WHITELIST);
-    
-        final User user = delegateAuthenticator.authenticate(request);
+        
+        User user = delegateAuthenticator.authenticate(request);
         long standardAuthTime = System.currentTimeMillis() - start;
         
         //the user could be null at this point because the token does
@@ -99,7 +100,12 @@ public class ExtendedAuthenticator implements Authenticator {
             return authorizationResult.isAuthorized() ? extendedUser : null;
             
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Cannot authenticate user with custom authenticator, returning standard User", e);
+            log.log(Level.SEVERE, "Cannot authenticate user with extended authenticator. Fallback to default authenticator.", e);
+            if (clientIdWhitelistWasEnabled) {
+                attribute.set(Attribute.ENABLE_CLIENT_ID_WHITELIST, Boolean.TRUE);
+                user = delegateAuthenticator.authenticate(request);
+            }
+            
             return user;
         }
     }
