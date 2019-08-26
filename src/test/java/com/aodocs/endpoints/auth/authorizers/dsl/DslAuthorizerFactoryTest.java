@@ -107,6 +107,7 @@ public class DslAuthorizerFactoryTest {
     private void roundtrip(Authorizer authorizer, DslAuthorizerFactory.Format format) throws IOException {
         DslAuthorizerFactory factory = DslAuthorizerFactory.get();
         String serialized = factory.toString(authorizer, format);
+        System.err.println(format.name() + "==> " + serialized);
         
         Authorizer deserialized = factory.build(serialized, format);
         String serialized1 = factory.toString(deserialized, format);

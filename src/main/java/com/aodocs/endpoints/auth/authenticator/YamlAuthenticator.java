@@ -24,6 +24,7 @@ import java.io.IOException;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.aodocs.endpoints.auth.authorizers.dsl.DslAuthorizerFactory;
 import com.google.api.client.util.Throwables;
+import com.google.api.server.spi.config.Authenticator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.flogger.FluentLogger;
@@ -39,6 +40,10 @@ public final class YamlAuthenticator extends ExtendedAuthenticator {
   
   public YamlAuthenticator() {
     super(loadAuthorizer());
+  }
+  
+  public YamlAuthenticator(Authenticator delegate) {
+    super(delegate, loadAuthorizer());
   }
   
   @VisibleForTesting
