@@ -33,6 +33,7 @@ public final class DisjunctAuthenticator implements Authenticator {
 	
 	public DisjunctAuthenticator(@NonNull Authenticator delegate, Authenticator... delegates) {
 		ImmutableList.Builder<Authenticator> authenticatorBuilder = new ImmutableList.Builder<>();
+		authenticatorBuilder.add(delegate);
 		if (delegates != null) {
 			authenticatorBuilder.add(delegates);
 		}
