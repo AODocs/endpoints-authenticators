@@ -19,45 +19,44 @@
  */
 package com.aodocs.endpoints.auth.authenticator;
 
-import javax.servlet.http.HttpServletRequest;
-
-import lombok.NonNull;
-
 import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Authenticator;
 import com.google.common.collect.ImmutableList;
+import lombok.NonNull;
+
+import javax.servlet.http.HttpServletRequest;
 
 public final class DisjunctAuthenticator implements Authenticator {
-	private final ImmutableList<Authenticator> authenticators;
-	
-	public DisjunctAuthenticator(@NonNull Authenticator delegate, Authenticator... delegates) {
-		ImmutableList.Builder<Authenticator> authenticatorBuilder = new ImmutableList.Builder<>();
-		authenticatorBuilder.add(delegate);
-		if (delegates != null) {
-			authenticatorBuilder.add(delegates);
-		}
-		authenticators = authenticatorBuilder.build();
-	}
-	
-	@Override
-	public User authenticate(HttpServletRequest httpServletRequest) throws ServiceException {
-		ServiceException latestException = null;
-		for (Authenticator authenticator:authenticators) {
-			try {
-				User user = authenticator.authenticate(httpServletRequest);
-				if (user != null) {
-					return user;
-				}
-			} catch (ServiceException e) {
-				latestException = e;
-			}
-		}
-		
-		if (latestException != null) {
-			throw latestException;
-		}
-		
-		return null;
-	}
+    private final ImmutableList<Authenticator> authenticators;
+
+    public DisjunctAuthenticator(@NonNull Authenticator delegate, Authenticator... delegates) {
+        ImmutableList.Builder<Authenticator> authenticatorBuilder = new ImmutableList.Builder<>();
+        authenticatorBuilder.add(delegate);
+        if (delegates != null) {
+            authenticatorBuilder.add(delegates);
+        }
+        authenticators = authenticatorBuilder.build();
+    }
+
+    @Override
+    public User authenticate(HttpServletRequest httpServletRequest) throws ServiceException {
+        ServiceException latestException = null;
+        for (Authenticator authenticator : authenticators) {
+            try {
+                User user = authenticator.authenticate(httpServletRequest);
+                if (user != null) {
+                    return user;
+                }
+            } catch (ServiceException e) {
+                latestException = e;
+            }
+        }
+
+        if (latestException != null) {
+            throw latestException;
+        }
+
+        return null;
+    }
 }

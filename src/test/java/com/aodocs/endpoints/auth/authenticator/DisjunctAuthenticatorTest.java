@@ -19,98 +19,92 @@
  */
 package com.aodocs.endpoints.auth.authenticator;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.response.ServiceUnavailableException;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import javax.servlet.http.HttpServletRequest;
+
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.*;
 
 public class DisjunctAuthenticatorTest {
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-	
-	@Test
-	public void testAtLeastOneDelegateIsMandatory() {
-		expectedException.expect(NullPointerException.class);
-		new DisjunctAuthenticator(null);
-		
-		//Valid
-		Authenticator delegate = mock(Authenticator.class);
-		new DisjunctAuthenticator(delegate);
-	}
-	
-	@Test
-	public void testOneDelegateAuthenticatedTheUser() throws ServiceException {
-		HttpServletRequest request = mock(HttpServletRequest.class);
-		
-		//Authenticator returning null
-		Authenticator first = mock(Authenticator.class);
-		
-		Authenticator second = mock(Authenticator.class);
-		User user = new User("mail@mail.com");
-		when(second.authenticate(request)).thenReturn(user);
-		
-		DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
-		User authenticatedUser = underTest.authenticate(request);
-		assertSame(user, authenticatedUser);
-	}
-	
-	@Test
-	public void testThrowingException() throws ServiceException {
-		HttpServletRequest request = mock(HttpServletRequest.class);
-		
-		//Authenticator throwing exception
-		Authenticator first = mock(Authenticator.class);
-		doThrow(ServiceUnavailableException.class)
-				.when(first)
-				.authenticate(request);
-		
-		Authenticator second = mock(Authenticator.class);
-		User user = new User("mail@mail.com");
-		when(second.authenticate(request)).thenReturn(user);
-		
-		DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
-		User authenticatedUser = underTest.authenticate(request);
-		assertSame(user, authenticatedUser);
-	}
-	
-	@Test
-	public void testRethrowTheLatestException() throws ServiceException {
-		HttpServletRequest request = mock(HttpServletRequest.class);
-		
-		//Authenticator throwing exception
-		Authenticator first = mock(Authenticator.class);
-		doThrow(ServiceUnavailableException.class)
-				.when(first)
-				.authenticate(request);
-		
-		//Authenticator throwing exception
-		Authenticator second = mock(Authenticator.class);
-		ServiceUnavailableException toBeThrown = new ServiceUnavailableException("Message");
-		doThrow(toBeThrown)
-				.when(second)
-				.authenticate(request);
-		
-		try {
-			DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
-			underTest.authenticate(request);
-			fail("Expect the exception:" + toBeThrown);
-		} catch (ServiceException e) {
-			assertSame(toBeThrown, e);
-		}
-	}
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    @Test
+    public void testAtLeastOneDelegateIsMandatory() {
+        expectedException.expect(NullPointerException.class);
+        new DisjunctAuthenticator(null);
+
+        //Valid
+        Authenticator delegate = mock(Authenticator.class);
+        new DisjunctAuthenticator(delegate);
+    }
+
+    @Test
+    public void testOneDelegateAuthenticatedTheUser() throws ServiceException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+
+        //Authenticator returning null
+        Authenticator first = mock(Authenticator.class);
+
+        Authenticator second = mock(Authenticator.class);
+        User user = new User("mail@mail.com");
+        when(second.authenticate(request)).thenReturn(user);
+
+        DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
+        User authenticatedUser = underTest.authenticate(request);
+        assertSame(user, authenticatedUser);
+    }
+
+    @Test
+    public void testThrowingException() throws ServiceException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+
+        //Authenticator throwing exception
+        Authenticator first = mock(Authenticator.class);
+        doThrow(ServiceUnavailableException.class)
+                .when(first)
+                .authenticate(request);
+
+        Authenticator second = mock(Authenticator.class);
+        User user = new User("mail@mail.com");
+        when(second.authenticate(request)).thenReturn(user);
+
+        DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
+        User authenticatedUser = underTest.authenticate(request);
+        assertSame(user, authenticatedUser);
+    }
+
+    @Test
+    public void testRethrowTheLatestException() throws ServiceException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+
+        //Authenticator throwing exception
+        Authenticator first = mock(Authenticator.class);
+        doThrow(ServiceUnavailableException.class)
+                .when(first)
+                .authenticate(request);
+
+        //Authenticator throwing exception
+        Authenticator second = mock(Authenticator.class);
+        ServiceUnavailableException toBeThrown = new ServiceUnavailableException("Message");
+        doThrow(toBeThrown)
+                .when(second)
+                .authenticate(request);
+
+        try {
+            DisjunctAuthenticator underTest = new DisjunctAuthenticator(first, second);
+            underTest.authenticate(request);
+            fail("Expect the exception:" + toBeThrown);
+        } catch (ServiceException e) {
+            assertSame(toBeThrown, e);
+        }
+    }
 }
