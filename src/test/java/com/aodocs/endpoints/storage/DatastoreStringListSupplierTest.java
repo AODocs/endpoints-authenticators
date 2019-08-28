@@ -19,24 +19,24 @@
  */
 package com.aodocs.endpoints.storage;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import com.aodocs.endpoints.auth.AppEngineTest;
+import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.Entity;
+import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.testing.LocalDatastoreHelper;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.threeten.bp.Duration;
 
-import com.aodocs.endpoints.auth.AppEngineTest;
-import com.google.cloud.datastore.Datastore;
-import com.google.cloud.datastore.Entity;
-import com.google.cloud.datastore.Key;
-import com.google.cloud.datastore.testing.LocalDatastoreHelper;
-import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * This test is very slow, because of the local DS emulator.
