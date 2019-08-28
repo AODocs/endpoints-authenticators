@@ -19,12 +19,15 @@
  */
 package com.aodocs.endpoints.storage;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.datastore.*;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
+import lombok.Builder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,47 +38,33 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class DatastoreStringListSupplier extends AsyncRefreshCachingStringListSupplier {
 
+    private static Supplier<Datastore> defaultSupplier() {
+        return Suppliers.memoize(() -> DatastoreOptions.getDefaultInstance().getService());
+    }
+
     private final Datastore datastore;
     private final KeyQuery query;
 
     //used for serialization only
     @JsonProperty
     private final String namespace;
+
     @JsonProperty("datastoreEntity")
     private final String kind;
 
-    //used to define defaults for serialization
-    private DatastoreStringListSupplier() {
-        super(null);
-        this.kind = null;
-        this.namespace = null;
-        this.datastore = null;
-        this.query = null;
+    @JsonCreator
+    DatastoreStringListSupplier(@JsonProperty("datastoreEntity") String kind, @JsonProperty String namespace,
+                                @JsonProperty Integer ttlInSeconds) {
+        this(kind, namespace, ttlInSeconds, DatastoreOptions.getDefaultInstance().getService());
     }
 
-    public DatastoreStringListSupplier(String kind) {
-        this(kind, null);
-    }
 
-    public DatastoreStringListSupplier(String kind, String namespace) {
-        this(kind, namespace, null, DatastoreOptions.getDefaultInstance());
-    }
-
-    public DatastoreStringListSupplier(String kind, int ttlInSeconds) {
-        this(kind, null, ttlInSeconds);
-    }
-
-    public DatastoreStringListSupplier(String kind, String namespace, int ttlInSeconds) {
-        this(kind, namespace, ttlInSeconds, DatastoreOptions.getDefaultInstance());
-    }
-
-    @VisibleForTesting
-    DatastoreStringListSupplier(String kind, String namespace, Integer ttlInSeconds,
-                                DatastoreOptions datastoreOptions) {
+    @Builder
+    DatastoreStringListSupplier(String kind, String namespace, Integer ttlInSeconds, Datastore datastore) {
         super(ttlInSeconds);
         this.kind = Preconditions.checkNotNull(kind);
         this.namespace = namespace;
-        this.datastore = datastoreOptions.getService();
+        this.datastore = datastore;
         this.query = Query.newKeyQueryBuilder().setKind(kind).setNamespace(namespace).setLimit(100).build();
     }
 
@@ -85,5 +74,4 @@ public class DatastoreStringListSupplier extends AsyncRefreshCachingStringListSu
         return Lists.newArrayList(results).stream()
                 .map(input -> input.getNameOrId().toString()).collect(Collectors.toList());
     }
-
 }

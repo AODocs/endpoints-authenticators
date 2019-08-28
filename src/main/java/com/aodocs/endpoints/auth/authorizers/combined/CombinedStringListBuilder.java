@@ -42,7 +42,7 @@ class CombinedStringListBuilder {
                     new ClasspathStringListSupplier(getPath(listId, whitelist)),
                     new CloudStorageStringListSupplier("gs://" + id + "-" + getPath(listId, whitelist), ttlInSeconds
                     ),
-                    new DatastoreStringListSupplier(id, ttlInSeconds)
+                    DatastoreStringListSupplier.builder().kind(id).ttlInSeconds(ttlInSeconds).build()
             );
             //TODO log the sources
         }
