@@ -45,7 +45,7 @@ public class AsyncRefreshMemoizingSupplier<T> implements Supplier<T> {
 
     public static <T> AsyncRefreshMemoizingSupplier<T> create(int ttlInSeconds, final Supplier<T> supplier) {
         if (AppengineHelper.isRunningOnAppengineStandard())  {
-            return new AsyncRefreshMemoizingSupplier<T>(ttlInSeconds, supplier, ThreadManager.backgroundThreadFactory());
+            return new AsyncRefreshMemoizingSupplier<T>(ttlInSeconds, supplier, MoreExecutors.platformThreadFactory());
         }
         return new AsyncRefreshMemoizingSupplier<T>(ttlInSeconds, supplier, Executors.defaultThreadFactory());
     }
