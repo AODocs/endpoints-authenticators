@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,22 +40,17 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * This test is very slow, because of the local DS emulator.
- *
+ * <p>
  * This test requires local installation of gcloud (with the "beta" component installed)
  */
 public class DatastoreStringListSupplierTest extends AppEngineTest {
 
     private static LocalDatastoreHelper helper;
-    
+
     @BeforeClass
     public static void createAndStartHelper() throws IOException, InterruptedException {
         helper = LocalDatastoreHelper.create(1);
         helper.start();
-    }
-
-    @Before
-    public void startHelper() throws IOException, InterruptedException {
-        helper.reset();
     }
 
     @AfterClass
@@ -63,15 +58,31 @@ public class DatastoreStringListSupplierTest extends AppEngineTest {
         helper.stop(Duration.ofMinutes(1));
     }
 
+    @Before
+    public void startHelper() throws IOException, InterruptedException {
+        helper.reset();
+    }
+
     @Test
     public void testGet() {
         Datastore datastoreService = helper.getOptions().getService();
         //without namespace
         datastoreService.put(Entity.newBuilder(Key.newBuilder(helper.getProjectId(), "ClientId", "12345").build()).build());
-        assertEquals(ImmutableList.of("12345"), new DatastoreStringListSupplier("ClientId", null, 1, helper.getOptions()).get());
+        assertEquals(
+                ImmutableList.of("12345"),
+                DatastoreStringListSupplier.builder()
+                        .kind("ClientId").ttlInSeconds(10)
+                        .datastore(datastoreService)
+                        .build().get()
+        );
         //with namespace
         datastoreService.put(Entity.newBuilder(Key.newBuilder(helper.getProjectId(), "ClientId", "12345").setNamespace("ns").build()).build());
-        assertEquals(ImmutableList.of("12345"), new DatastoreStringListSupplier("ClientId", "ns", 1, helper.getOptions()).get());
+        assertEquals(
+                ImmutableList.of("12345"),
+                DatastoreStringListSupplier.builder()
+                        .kind("ClientId").namespace("ns")
+                        .datastore(datastoreService)
+                        .build().get());
     }
 
     @Test
@@ -79,7 +90,10 @@ public class DatastoreStringListSupplierTest extends AppEngineTest {
         //TODO test with ticker
         Datastore datastoreService = helper.getOptions().getService();
         datastoreService.put(Entity.newBuilder(Key.newBuilder(helper.getProjectId(), "ClientId", "12345").build()).build());
-        DatastoreStringListSupplier supplier = new DatastoreStringListSupplier("ClientId", null, 2, helper.getOptions());
+        DatastoreStringListSupplier supplier = DatastoreStringListSupplier.builder()
+                .kind("ClientId").ttlInSeconds(2)
+                .datastore(datastoreService)
+                .build();
         assertEquals(ImmutableList.of("12345"), supplier.get());
         //add a new value
         datastoreService.put(Entity.newBuilder(Key.newBuilder(helper.getProjectId(), "ClientId", "123456").build()).build());
