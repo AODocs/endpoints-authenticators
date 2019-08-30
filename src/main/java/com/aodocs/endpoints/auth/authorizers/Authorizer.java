@@ -38,6 +38,7 @@ public interface Authorizer {
       return new AuthorizationResultBuilder();
     }
   }
+
   /**
    * Implements authorization logic.
    *

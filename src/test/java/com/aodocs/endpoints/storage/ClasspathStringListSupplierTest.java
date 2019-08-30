@@ -43,12 +43,12 @@ public class ClasspathStringListSupplierTest {
     @Test(expected = IllegalArgumentException.class)
     public void testMissingWithFailOnMissing() {
         //enable fail on unexisting resources
-        new ClasspathStringListSupplier("doesnotexist");
+        new ClasspathStringListSupplier("doesnotexist").get();
     }
 
     @Test(expected = NullPointerException.class)
     public void testNull() {
-        new ClasspathStringListSupplier(null);
+        new ClasspathStringListSupplier(null).get();
     }
 
 }
