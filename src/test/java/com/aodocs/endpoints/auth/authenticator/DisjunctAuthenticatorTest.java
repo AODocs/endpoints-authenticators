@@ -41,8 +41,12 @@ public class DisjunctAuthenticatorTest {
     public void testAtLeastOneDelegateIsMandatory() {
         expectedException.expect(NullPointerException.class);
         new DisjunctAuthenticator(null);
+        testValidAuthenticatorCreation();
 
-        //Valid
+    }
+
+    @Test
+    public void testValidAuthenticatorCreation() {
         Authenticator delegate = mock(Authenticator.class);
         new DisjunctAuthenticator(delegate);
     }

@@ -23,12 +23,15 @@ import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Authenticator;
 import com.google.common.collect.ImmutableList;
+import com.google.common.flogger.FluentLogger;
 import lombok.NonNull;
 
 import javax.servlet.http.HttpServletRequest;
 
 public final class DisjunctAuthenticator implements Authenticator {
     private final ImmutableList<Authenticator> authenticators;
+    private static FluentLogger logger = FluentLogger.forEnclosingClass();
+
 
     public DisjunctAuthenticator(@NonNull Authenticator delegate, Authenticator... delegates) {
         ImmutableList.Builder<Authenticator> authenticatorBuilder = new ImmutableList.Builder<>();
@@ -49,6 +52,7 @@ public final class DisjunctAuthenticator implements Authenticator {
                     return user;
                 }
             } catch (ServiceException e) {
+                logger.atWarning().withCause(e).log("Authenticator error.");
                 latestException = e;
             }
         }
