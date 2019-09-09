@@ -25,8 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.client.util.Throwables;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.flogger.FluentLogger;
 import com.google.common.io.Resources;
 
@@ -49,15 +47,12 @@ public class ClasspathStringListSupplier extends StaticStringListSupplier {
 
     /**
      * Will fail on missing resource.
-     *
-     * @param classpathResource
      */
     public ClasspathStringListSupplier(String classpathResource) {
         this(classpathResource, true);
     }
 
     /**
-     * @param classpathResource
      * @param failOnMissing defines if should fail if resource is missing. When false, provides empty list.
      */
     @JsonCreator

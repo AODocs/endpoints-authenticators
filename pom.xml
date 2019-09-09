@@ -291,10 +291,6 @@
                                     <shadedPattern>${repackagedDir}.com.fasterxml</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.google.api.client</pattern>
-                                    <shadedPattern>${repackagedDir}.com.google.api.client</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>com.google.common</pattern>
                                     <shadedPattern>${repackagedDir}.com.google.common</shadedPattern>
                                 </relocation>
