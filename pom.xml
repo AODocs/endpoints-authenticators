@@ -38,7 +38,7 @@
         <http-client.version>1.25.0</http-client.version>
         <repackagedDir>endpoints.repackaged</repackagedDir>
 
-        <gae.version>1.9.68</gae.version>
+        <gae.version>1.9.76</gae.version>
 
         <endpoints-authenticators.scm.connection>git@github.com:AODocs/endpoints-authenticators.git</endpoints-authenticators.scm.connection>
         <endpoints-authenticators.scm.url>https://github.com/AODocs/endpoints-authenticators</endpoints-authenticators.scm.url>
