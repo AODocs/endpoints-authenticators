@@ -32,7 +32,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <endpoints-framework.version>2.2.1</endpoints-framework.version>
+        <endpoints-framework.version>2.3.3</endpoints-framework.version>
         <!--Should be compatible with version from endpoints-framework-->        
         <jackson.version>2.9.8</jackson.version>
         <http-client.version>1.25.0</http-client.version>
@@ -59,7 +59,7 @@
     <dependencies>
         <!--Endpoints-->
         <dependency>
-            <groupId>com.google.endpoints</groupId>
+            <groupId>com.aodocs.endpoints</groupId>
             <artifactId>endpoints-framework</artifactId>
             <version>${endpoints-framework.version}</version>
             <scope>provided</scope>
@@ -303,6 +303,19 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>artifactory</id>
+            <name>libs-release</name>
+            <url>https://aodocs.jfrog.io/aodocs/libs-release</url>
+        </repository>
+    </repositories>
+
     <distributionManagement>
         <repository>
             <id>artifactory</id>
@@ -313,7 +326,7 @@
             <id>artifactory</id>
             <name>libs-snapshot</name>
             <url>https://aodocs.jfrog.io/aodocs/libs-snapshot</url>
-    </snapshotRepository>
+        </snapshotRepository>
     </distributionManagement>
 
 </project>
