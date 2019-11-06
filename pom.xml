@@ -32,7 +32,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <endpoints-framework.version>2.2.1</endpoints-framework.version>
+        <endpoints-framework.version>2.4.0</endpoints-framework.version>
         <!--Should be compatible with version from endpoints-framework-->        
         <jackson.version>2.9.8</jackson.version>
         <http-client.version>1.25.0</http-client.version>
@@ -59,7 +59,7 @@
     <dependencies>
         <!--Endpoints-->
         <dependency>
-            <groupId>com.google.endpoints</groupId>
+            <groupId>com.aodocs.endpoints</groupId>
             <artifactId>endpoints-framework</artifactId>
             <version>${endpoints-framework.version}</version>
             <scope>provided</scope>
@@ -302,6 +302,14 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>artifactory</id>
+            <name>libs-release</name>
+            <url>https://aodocs.jfrog.io/aodocs/libs-release</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>
