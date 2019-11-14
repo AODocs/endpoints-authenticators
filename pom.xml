@@ -32,7 +32,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <endpoints-framework.version>2.4.0</endpoints-framework.version>
+        <endpoints-framework.version>2.3.3</endpoints-framework.version>
         <!--Should be compatible with version from endpoints-framework-->        
         <jackson.version>2.9.8</jackson.version>
         <http-client.version>1.25.0</http-client.version>
