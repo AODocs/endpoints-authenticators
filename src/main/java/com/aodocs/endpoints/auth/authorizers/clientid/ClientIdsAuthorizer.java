@@ -51,7 +51,6 @@ public final class ClientIdsAuthorizer extends AbstractAuthorizer {
         String clientId = extendedUser.getAuthInfo().getClientId();
         List<String> allowedClientIds = clientIdSupplier.get();
         logger.atFine().log("Class=%s, ClientId=%s, Allowed=%s", getClass(), clientId, allowedClientIds);
-
-        return newResultBuilder().authorized(clientIdSupplier.get().contains(extendedUser.getAuthInfo().getClientId())).build();
+        return newResultBuilder().authorized(clientIdSupplier.get().contains(clientId)).build();
     }
 }
