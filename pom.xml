@@ -36,7 +36,7 @@
         <!--Should be compatible with version from endpoints-framework-->        
         <jackson.version>2.10.1</jackson.version>
         <http-client.version>1.25.0</http-client.version>
-        <repackagedDir>endpoints.repackaged</repackagedDir>
+        <repackagedDir>endpoints.authenticators.repackaged</repackagedDir>
 
         <gae.version>1.9.68</gae.version>
 
@@ -222,6 +222,17 @@
             <version>${gae.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger</artifactId>
+            <version>0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger-system-backend</artifactId>
+            <version>0.4</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -282,6 +293,8 @@
                             <artifactSet>
                                 <includes>
                                     <include>com.fasterxml.jackson.*:*</include>
+                                    <include>com.google.guava</include>
+                                    <include>com.google.flogger</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
