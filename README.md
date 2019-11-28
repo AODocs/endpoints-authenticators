@@ -26,7 +26,7 @@ This is targeted to run on App Engine (either Standard or Flex) and was NOT test
 
 All the custom authenticators inherit from ExtendedAuthenticator, and provides an ExtendedUser object to implementations with much more information than the built-in User object.
 
-To use a custom authenticator, nnotate your API with a custom [Authenticator](https://cloud.google.com/endpoints/docs/frameworks/java/javadoc/com/google/api/server/spi/config/Authenticator)) using the "authenticators" field of @Api, @ApiClass or @ApiMethod. You might want to set the "clientIds" field of these annotation to "*" to indicate the built-in check is disabled, but using a subclass of ExtendedAuthenticator will disable it anyway.
+To use a custom authenticator, annotate your API with a custom [Authenticator](https://cloud.google.com/endpoints/docs/frameworks/java/javadoc/com/google/api/server/spi/config/Authenticator)) using the "authenticators" field of @Api, @ApiClass or @ApiMethod. You might want to set the "clientIds" field of these annotation to "*" to indicate the built-in check is disabled, but using a subclass of ExtendedAuthenticator will disable it anyway.
 
 An Authenticator class must have a public parameter-less constructor and be a @Singleton, so you will probably have to create subclasses of the provided custom Authenticators if they require configuration.
 
