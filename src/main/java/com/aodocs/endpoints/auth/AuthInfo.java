@@ -57,7 +57,7 @@ public class AuthInfo {
         this.email = tokenInfo.getPayload().getEmail();
         this.verifiedEmail = tokenInfo.getPayload().getEmailVerified();
         this.hd = tokenInfo.getPayload().getHostedDomain();
-        this.clientId = tokenInfo.getPayload().getIssuer();
+        this.clientId = tokenInfo.getPayload().getAuthorizedParty();
         this.audience = tokenInfo.getPayload().getAudienceAsList();
         this.scopes = null;
         this.expiresInSeconds = tokenInfo.getPayload().getExpirationTimeSeconds();
