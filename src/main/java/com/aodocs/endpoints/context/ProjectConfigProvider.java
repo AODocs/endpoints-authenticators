@@ -21,12 +21,13 @@ package com.aodocs.endpoints.context;
 
 import com.aodocs.endpoints.util.AsyncRefreshMemoizingSupplier;
 import com.aodocs.endpoints.util.cache.ObjectCache;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.util.Utils;
 import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.IamScopes;
 import com.google.api.services.iam.v1.model.ListServiceAccountsResponse;
 import com.google.api.services.iam.v1.model.ServiceAccount;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.Identity;
 import com.google.cloud.Policy;
 import com.google.cloud.Role;
@@ -148,8 +149,9 @@ public class ProjectConfigProvider {
 
     @SneakyThrows
 	static Iam defaultIamClient(String applicationName) {
+		GoogleCredentials credentials = GoogleCredentials.getApplicationDefault().createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
 		return new Iam.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(),
-		GoogleCredential.getApplicationDefault().createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM)))
+				new HttpCredentialsAdapter(credentials))
 		.setApplicationName(applicationName).build();
 	}
 
