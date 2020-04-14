@@ -158,6 +158,11 @@ public class ProjectConfigProvider {
 	    this.iamClient = iamClient;
 	    this.applicationId = applicationId;
 	    this.project = resourceManager.get(applicationId);
+	    if (project == null) {
+	    	throw new IllegalStateException(
+					"The 'Cloud Resource Manager' API is probably not enabled in this project, " +
+							"please check in the GCP console");
+		}
 	    log.info("Project number for '" + applicationId + "' is " + project.getProjectNumber());
     }
 
