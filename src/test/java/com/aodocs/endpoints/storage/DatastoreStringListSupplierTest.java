@@ -49,7 +49,7 @@ public class DatastoreStringListSupplierTest extends AppEngineTest {
 
     @BeforeClass
     public static void createAndStartHelper() throws IOException, InterruptedException {
-        helper = LocalDatastoreHelper.create(1);
+        helper = LocalDatastoreHelper.newBuilder().setStoreOnDisk(false).setConsistency(1D).build();
         helper.start();
     }
 
@@ -59,7 +59,7 @@ public class DatastoreStringListSupplierTest extends AppEngineTest {
     }
 
     @Before
-    public void startHelper() throws IOException, InterruptedException {
+    public void startHelper() throws IOException {
         helper.reset();
     }
 

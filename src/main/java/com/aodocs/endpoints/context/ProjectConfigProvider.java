@@ -48,6 +48,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -185,7 +186,7 @@ public class ProjectConfigProvider {
     //TODO implement retries
     private ProjectConfig getProjectConfig() {
 	    ImmutableMap<Role, ImmutableSet<Identity>> roleBindings = ImmutableMap.copyOf(
-			    Maps.transformValues(getIamPolicyCached(applicationId).getBindings(), ImmutableSet::copyOf));
+			    Maps.transformValues(getIamBindingsCached(applicationId), ImmutableSet::copyOf));
 	    ImmutableBiMap.Builder<String, String> serviceAccountClientIds = ImmutableBiMap.builder();
 	    for (ServiceAccount serviceAccount : listServiceAccountsCached()) {
 	        serviceAccountClientIds.put(serviceAccount.getEmail(), serviceAccount.getOauth2ClientId());
@@ -195,9 +196,11 @@ public class ProjectConfigProvider {
         return result;
     }
 
-    private Policy getIamPolicyCached(String key) {
-        return ObjectCache.get()
-		        .getCachedSerializable(key, Policy.class, input -> resourceManager.getPolicy(applicationId), TTL_IN_SECONDS);
+    private ImmutableMap<Role, Set<Identity>> getIamBindingsCached(String key) {
+    	//Policy object can't be serialized, but we only need the bindings
+        return (ImmutableMap<Role, Set<Identity>>) ObjectCache.get()
+		        .getCachedSerializable(key, ImmutableMap.class, 
+				        input -> ImmutableMap.copyOf(resourceManager.getPolicy(applicationId).getBindings()),TTL_IN_SECONDS);
     }
 
     private List<ServiceAccount> listServiceAccountsCached() {
