@@ -4,7 +4,7 @@
 
     <groupId>com.aodocs.endpoints</groupId>
     <artifactId>endpoints-authenticators</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <version>1.9</version>
 
     <name>Extended authenticators for Cloud Endpoints v2</name>
     <description>This project provides a set of custom authenticators for Cloud Endpoints, allowing to easily implement custom authentication strategies.</description>
@@ -26,7 +26,7 @@
         <connection>scm:git:${endpoints-authenticators.scm.connection}</connection>
         <developerConnection>scm:git:${endpoints-authenticators.scm.connection}</developerConnection>
         <url>${endpoints-authenticators.scm.url}</url>
-        <tag>HEAD</tag>
+        <tag>v1.9</tag>
     </scm>
 
     <properties>
