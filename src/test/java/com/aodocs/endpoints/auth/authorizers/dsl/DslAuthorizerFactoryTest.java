@@ -21,21 +21,29 @@ package com.aodocs.endpoints.auth.authorizers.dsl;
 
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.clientid.CurrentProjectClientIdAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.logic.DisjunctAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthorizer;
 import com.aodocs.endpoints.storage.*;
+import com.google.cloud.datastore.KeyQuery;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
 import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DslAuthorizerFactoryTest {
 
@@ -60,6 +68,25 @@ public class DslAuthorizerFactoryTest {
         CloudStorageFileSystemProvider.setStorageOptions(StorageOptions.getDefaultInstance());
     }
 
+    @Test
+    public void testLoadYaml() throws IOException {
+        Authorizer authorizer = DslAuthorizerFactory.get()
+                .build(Resources.toString(Resources.getResource("authenticator.yaml"), StandardCharsets.UTF_8), DslAuthorizerFactory.Format.YAML);
+        assertTrue(authorizer instanceof DisjunctAuthorizer);
+        DisjunctAuthorizer or = (DisjunctAuthorizer) authorizer;
+        ImmutableList<Authorizer> authorizers = or.getAuthorizers();
+        assertEquals(3, authorizers.size());
+        assertTrue(authorizers.get(0) instanceof CurrentProjectClientIdAuthorizer);
+        assertTrue(authorizers.get(1) instanceof ClientIdsAuthorizer);
+        assertTrue(authorizers.get(2) instanceof ClientIdsAuthorizer);
+        ClientIdsAuthorizer datastoreSource = (ClientIdsAuthorizer) authorizers.get(2);
+        StringListSupplier clientIdSupplier = datastoreSource.getClientIdSupplier();
+        assertTrue(clientIdSupplier instanceof DatastoreStringListSupplier);
+        DatastoreStringListSupplier datastoreSupplier = (DatastoreStringListSupplier) clientIdSupplier;
+        KeyQuery query = datastoreSupplier.getQuery();
+        assertEquals(500, (int) query.getLimit());
+    }
+    
     @Test
     public void testAuthenticatorsRoundtrip() throws IOException {
         roundtripall(TEST_AUTHORIZER);
