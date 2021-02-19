@@ -1,0 +1,10 @@
+or:
+  - "currentProjectClientId"
+  - clientIds:
+      classpathResource: "list.txt"
+      failOnMissing: true
+  - clientIds:
+      datastoreEntity: "ClientId"
+      namespace: "-GLOBAL-"
+      ttlInSeconds: 300
+      limit: 500

@@ -22,6 +22,8 @@ package com.aodocs.endpoints.auth.authorizers.clientid;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.flogger.FluentLogger;
+
+import lombok.Getter;
 import lombok.NonNull;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
@@ -40,6 +42,7 @@ public final class ClientIdsAuthorizer extends AbstractAuthorizer {
     private static FluentLogger logger = FluentLogger.forEnclosingClass();
 
     @JsonProperty("clientIds")
+    @Getter
     private final StringListSupplier clientIdSupplier;
 
     @JsonCreator

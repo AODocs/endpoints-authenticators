@@ -24,6 +24,7 @@ import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
+import lombok.Getter;
 import lombok.NonNull;
 
 import com.aodocs.endpoints.auth.ExtendedUser;
@@ -41,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 public final class DisjunctAuthorizer extends AbstractAuthorizer {
 
     @JsonProperty("or")
+    @Getter
     private final ImmutableList<Authorizer> authorizers;
 
     @JsonCreator
