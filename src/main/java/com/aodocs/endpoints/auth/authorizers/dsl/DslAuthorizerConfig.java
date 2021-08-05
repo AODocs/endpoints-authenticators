@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
+import com.aodocs.endpoints.auth.authorizers.audience.CurrentProjectAudienceAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.CurrentProjectClientIdAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.config.VersionContainsAuthorizer;
@@ -95,6 +96,7 @@ public interface DslAuthorizerConfig {
             .put("jwt", JwtOnlyAuthorizer.class)  //alias to idToken?
             .put("oauth2", OAuth2OnlyAuthorizer.class)  //alias to accessToken?
             .put("currentProjectClientId", CurrentProjectClientIdAuthorizer.class)
+            .put("currentProjectAudience", CurrentProjectAudienceAuthorizer.class)
             .put("projectMember", ProjectMemberAuthorizer.class)
             .put("projectOwner", ProjectOwnerAuthorizer.class)
             .build();
