@@ -32,6 +32,11 @@ import com.google.api.server.spi.config.model.ApiMethodConfig;
 public final class CurrentProjectClientIdAuthorizer extends AbstractAuthorizer {
 
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(ProjectConfigProvider.get().isProjectClientId(extendedUser.getAuthInfo().getClientId())).build();
+        String clientId = extendedUser.getAuthInfo().getClientId();
+        if (clientId == null) {
+            return newResultBuilder().authorized(false).build();
+        }
+    
+        return newResultBuilder().authorized(ProjectConfigProvider.get().isProjectClientId(clientId)).build();
     }
 }
