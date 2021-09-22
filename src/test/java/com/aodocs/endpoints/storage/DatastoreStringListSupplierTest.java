@@ -24,7 +24,6 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.testing.LocalDatastoreHelper;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import org.junit.AfterClass;
 import org.junit.Before;

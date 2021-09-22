@@ -32,16 +32,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <endpoints-framework.version>2.4.9</endpoints-framework.version>
-        <!--Should be compatible with version from endpoints-framework-->        
-        <jackson.version>2.12.1</jackson.version>
-        <google.apiclient.majorversion>1.31</google.apiclient.majorversion>
+        <endpoints-framework.version>2.5.0</endpoints-framework.version>
 
-        <gae.version>1.9.84</gae.version>
+        <gae.version>1.9.91</gae.version>
 
         <endpoints-authenticators.scm.connection>git@github.com:AODocs/endpoints-authenticators.git</endpoints-authenticators.scm.connection>
         <endpoints-authenticators.scm.url>https://github.com/AODocs/endpoints-authenticators</endpoints-authenticators.scm.url>
-        <flogger.version>0.5.1</flogger.version>
+        <flogger.version>0.6</flogger.version>
     </properties>
 
     <dependencyManagement>
@@ -49,7 +46,21 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>google-cloud-bom</artifactId>
-                <version>0.147.0</version>
+                <version>0.161.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>2.12.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.api-client</groupId>
+                <artifactId>google-api-client-bom</artifactId>
+                <version>1.32.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -69,56 +80,48 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.12</version>
+            <version>1.18.20</version>
         </dependency>
         
         <!--Jackson-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-guava</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-parameter-names</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
 
         <!--Google APIs clients-->
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
-            <version>${google.apiclient.majorversion}.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-iam</artifactId>
-            <version>v1-rev20201112-${google.apiclient.majorversion}.0</version>
+            <version>v1-rev20210909-1.32.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -160,7 +163,6 @@
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client-appengine</artifactId>
-            <version>${google.apiclient.majorversion}.1</version>
             <optional>true</optional>
         </dependency>
 
@@ -180,26 +182,26 @@
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
-            <version>3.23.1-GA</version>
+            <version>3.28.0-GA</version>
         </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>3.7.7</version>
+            <version>3.12.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-            <version>5.3.3</version>
+            <version>5.3.10</version>
             <scope>test</scope>
         </dependency>
 
@@ -231,6 +233,26 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.6</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

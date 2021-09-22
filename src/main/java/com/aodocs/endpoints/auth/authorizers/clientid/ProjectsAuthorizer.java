@@ -19,8 +19,6 @@
  */
 package com.aodocs.endpoints.auth.authorizers.clientid;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 
 import lombok.NonNull;

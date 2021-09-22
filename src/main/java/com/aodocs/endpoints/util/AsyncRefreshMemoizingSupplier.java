@@ -20,13 +20,11 @@
 package com.aodocs.endpoints.util;
 
 import com.aodocs.endpoints.context.AppengineHelper;
-import com.google.appengine.api.ThreadManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ticker;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.concurrent.Executor;

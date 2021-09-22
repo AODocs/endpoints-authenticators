@@ -20,7 +20,6 @@
 package com.aodocs.endpoints.auth.authorizers.combined;
 
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.*;
-import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.versionContains;
 
 import javax.servlet.http.HttpServletRequest;
 
