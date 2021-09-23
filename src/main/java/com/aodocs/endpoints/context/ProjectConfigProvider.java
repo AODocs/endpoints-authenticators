@@ -30,19 +30,20 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.Identity;
 import com.google.cloud.Role;
-import com.google.cloud.resourcemanager.Project;
-import com.google.cloud.resourcemanager.ResourceManager;
-import com.google.cloud.resourcemanager.ResourceManagerOptions;
+import com.google.cloud.resourcemanager.v3.Project;
+import com.google.cloud.resourcemanager.v3.ProjectsClient;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.java.Log;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -50,19 +51,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Fetches project roles and update them regularly
  */
 @Log
 public class ProjectConfigProvider {
-
-    //TODO make this configurable
+	
+	//TODO make this configurable
     private static final int TTL_IN_SECONDS = 60 * 10;
 
     private static final Pattern CLIENT_ID_PATTERN = Pattern.compile("(\\d+)(-\\w+)?.apps.googleusercontent.com");
-
-    public static String extractProjectNumber(String clientId) {
+	public static final String PROJECTS_PREFIX = "projects/";
+	
+	public static String extractProjectNumber(String clientId) {
         Matcher matcher = CLIENT_ID_PATTERN.matcher(clientId);
         if (!matcher.matches())
             return null;
@@ -70,7 +73,7 @@ public class ProjectConfigProvider {
     }
 
     @Value
-    public class ProjectConfig {
+    public static class ProjectConfig {
         /**
          * Represents all roles
          */
@@ -118,9 +121,7 @@ public class ProjectConfigProvider {
 	    }
     }
 
-	private final ResourceManager resourceManager;
-	private final Iam iamClient;
-	private final String applicationId;
+	private final String projectName;
 	private final Project project;
 
     //used as a singleton cache for auto refresh, key is only used for the memcache
@@ -136,56 +137,61 @@ public class ProjectConfigProvider {
 		return INSTANCE;
 	}
 
-	@VisibleForTesting //TODO use proper injection instead
-	public static void override(String applicationId, ResourceManager resourceManager, Iam iamClient) {
-		INSTANCE = new ProjectConfigProvider(applicationId, resourceManager, iamClient);
-	}
-
     private ProjectConfigProvider() {
-        this(AppengineHelper.getApplicationId(),
-		        ResourceManagerOptions.getDefaultInstance().getService(),
-		        defaultIamClient(AppengineHelper.getApplicationId()));
+        this(AppengineHelper.getApplicationId());
     }
 
-    @SneakyThrows
-	static Iam defaultIamClient(String applicationName) {
-		GoogleCredentials credentials = GoogleCredentials.getApplicationDefault().createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
-		return new Iam.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(),
-				new HttpCredentialsAdapter(credentials))
-		.setApplicationName(applicationName).build();
-	}
-
-	private ProjectConfigProvider(String applicationId, ResourceManager resourceManager, Iam iamClient) {
-	    this.resourceManager = resourceManager;
-	    this.iamClient = iamClient;
-	    this.applicationId = applicationId;
-	    this.project = resourceManager.get(applicationId);
+    @VisibleForTesting
+	protected ProjectConfigProvider(String applicationId) {
+		this.projectName = PROJECTS_PREFIX + applicationId;
+		try (ProjectsClient client = getProjectsClient()) {
+			this.project = client.getProject(projectName);
+		}
 	    if (project == null) {
 	    	throw new IllegalStateException(
 					"The 'Cloud Resource Manager' API is probably not enabled in this project, " +
 							"please check in the GCP console");
 		}
-	    log.info("Project number for '" + applicationId + "' is " + project.getProjectNumber());
+	    log.info("Project number for '" + projectName + "' is " + getProjectNumber());
     }
-
-    public Project getProject() {
+	
+    @SneakyThrows(IOException.class)
+    @VisibleForTesting
+	protected ProjectsClient getProjectsClient() {
+		return ProjectsClient.create();
+	}
+	
+	@SneakyThrows(IOException.class)
+	@VisibleForTesting
+	protected Iam getIamClient() {
+		GoogleCredentials credentials = GoogleCredentials.getApplicationDefault().createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
+		return new Iam.Builder(Utils.getDefaultTransport(), Utils.getDefaultJsonFactory(),
+				new HttpCredentialsAdapter(credentials))
+				.setApplicationName(projectName).build();
+	}
+	
+	public final Project getProject() {
         return project;
     }
+	
+	public final String getProjectNumber() {
+		return project.getName().replace(PROJECTS_PREFIX, "");
+	}
 
-    public ProjectConfig getCachedProjectConfig() {
+    public final ProjectConfig getCachedProjectConfig() {
         return mutableConfigCache.get();
     }
 
-    public boolean isProjectClientId(String clientId) {
+    public final boolean isProjectClientId(String clientId) {
         if (getCachedProjectConfig().getServiceAccountClientIds().containsValue(clientId))
             return true;
-        return project.getProjectNumber().toString().equals(extractProjectNumber(clientId));
+        return getProjectNumber().equals(extractProjectNumber(clientId));
     }
 
     //TODO implement retries
     private ProjectConfig getProjectConfig() {
 	    ImmutableMap<Role, ImmutableSet<Identity>> roleBindings = ImmutableMap.copyOf(
-			    Maps.transformValues(getIamBindingsCached(applicationId), ImmutableSet::copyOf));
+			    Maps.transformValues(getIamBindingsCached(projectName), ImmutableSet::copyOf));
 	    ImmutableBiMap.Builder<String, String> serviceAccountClientIds = ImmutableBiMap.builder();
 	    for (ServiceAccount serviceAccount : listServiceAccountsCached()) {
 	        serviceAccountClientIds.put(serviceAccount.getEmail(), serviceAccount.getOauth2ClientId());
@@ -197,21 +203,28 @@ public class ProjectConfigProvider {
 
     private ImmutableMap<Role, Set<Identity>> getIamBindingsCached(String key) {
     	//Policy object can't be serialized, but we only need the bindings
-        return (ImmutableMap<Role, Set<Identity>>) ObjectCache.get()
-		        .getCachedSerializable(key, ImmutableMap.class, 
-				        input -> ImmutableMap.copyOf(resourceManager.getPolicy(applicationId).getBindings()),TTL_IN_SECONDS);
+	    return ObjectCache.get().getCachedSerializable(key, "iamBindings",
+			    input -> getIamBindings(), TTL_IN_SECONDS);
     }
-
-    private List<ServiceAccount> listServiceAccountsCached() {
+	
+	private ImmutableMap<Role, Set<Identity>> getIamBindings() {
+		try (ProjectsClient projectsClient = getProjectsClient()) {
+			return projectsClient.getIamPolicy(projectName).getBindingsList().stream().collect(ImmutableMap.toImmutableMap(
+					binding -> Role.of(binding.getRole()), binding -> binding.getMembersList().stream().map(Identity::valueOf).collect(Collectors.toSet())
+			));
+		}			
+	}
+	
+	private List<ServiceAccount> listServiceAccountsCached() {
         return ObjectCache.get()
-		        .getCachedJson(applicationId, ListServiceAccountsResponse.class, input -> listServiceAccounts(), TTL_IN_SECONDS)
+		        .getCachedJson(projectName, ListServiceAccountsResponse.class, input -> listServiceAccounts(), TTL_IN_SECONDS)
 		        .getAccounts();
     }
 
 	@SneakyThrows
 	private ListServiceAccountsResponse listServiceAccounts() {
     	//TODO handle service account list exceeding default page size
-		return iamClient.projects().serviceAccounts().list("projects/" + applicationId).execute();
+		return getIamClient().projects().serviceAccounts().list(projectName).execute();
 	}
 
 }

@@ -25,22 +25,21 @@ import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.ListServiceAccountsResponse;
 import com.google.appengine.api.utils.SystemProperty;
 import com.google.cloud.Identity;
-import com.google.cloud.Policy;
-import com.google.cloud.Role;
-import com.google.cloud.resourcemanager.Project;
-import com.google.cloud.resourcemanager.ProjectInfo;
-import com.google.cloud.resourcemanager.ResourceManager;
-import com.google.cloud.resourcemanager.testing.LocalResourceManagerHelper;
+import com.google.cloud.resourcemanager.v3.Project;
+import com.google.cloud.resourcemanager.v3.ProjectsClient;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
+import com.google.iam.v1.Binding;
+
 import lombok.SneakyThrows;
-import org.junit.After;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -50,23 +49,38 @@ import static org.mockito.Mockito.*;
  */
 public class ProjectConfigProviderTest extends AppEngineTest {
 
-    private LocalResourceManagerHelper helper = LocalResourceManagerHelper.create();
-
-    private Project project;
+    private static final String expectedProjectNumber = "1234567";
+    private ProjectConfigProvider projectConfigProvider;
 
     @Before
     public void setUp() throws IOException {
-        helper.start();
-        final ResourceManager resourceManager = helper.getOptions().getService();
         final String appId = SystemProperty.applicationId.get();
-        project = resourceManager.create(ProjectInfo.newBuilder(appId).build());
-        resourceManager.replacePolicy(appId, Policy.newBuilder()
-                .addIdentity(Role.of("someRole"), Identity.user("user@example.com"))
-                .build());
+        String projectName = "projects/" + appId;
+        //this instance has final methods, mocking needs mock-maker-inline
+        //see src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker
+        final ProjectsClient projectsClient = mock(ProjectsClient.class, RETURNS_DEEP_STUBS);
+        when(projectsClient.getProject(projectName))
+                .thenReturn(Project.newBuilder()
+                        .setName("projects/" + expectedProjectNumber)
+                        .build());
+        when(projectsClient.getIamPolicy(projectName).getBindingsList())
+                .thenReturn(Collections.singletonList(Binding.newBuilder()
+                                .setRole("someRole")
+                                .addMembers(Identity.user("user@example.com").strValue())
+                                .build()));
         final Iam iam = mock(Iam.class, RETURNS_DEEP_STUBS);
-        when(iam.projects().serviceAccounts().list("projects/" + appId).execute())
+        when(iam.projects().serviceAccounts().list(projectName).execute())
                 .thenReturn(loadJson(ListServiceAccountsResponse.class));
-        ProjectConfigProvider.override(appId, resourceManager, iam);
+        projectConfigProvider = new ProjectConfigProvider(appId) {
+            @Override
+            protected ProjectsClient getProjectsClient() {
+                return projectsClient;
+            }
+            @Override
+            protected Iam getIamClient() {
+                return iam;
+            }
+        };
     }
 
     @SneakyThrows
@@ -77,38 +91,33 @@ public class ProjectConfigProviderTest extends AppEngineTest {
         }
     }
 
-    @After
-    public void tearDown() {
-        helper.stop();
-    }
-
     @Test
     public void getProjectNumber() {
-        long projectNumber = ProjectConfigProvider.get().getProject().getProjectNumber();
-        assertEquals(project.getProjectNumber().longValue(), projectNumber);
+        String projectNumber = projectConfigProvider.getProjectNumber();
+        assertEquals(expectedProjectNumber, projectNumber);
     }
 
     @Test
     public void isProjectClientId() {
         //malformed client ids
-        assertFalse(ProjectConfigProvider.get().isProjectClientId("428563709008"));
-        assertFalse(ProjectConfigProvider.get().isProjectClientId(""));
-        assertFalse(ProjectConfigProvider.get().isProjectClientId("anystring"));
-        assertFalse(ProjectConfigProvider.get().isProjectClientId("42856370900a.apps.googleusercontent.com"));
-        assertFalse(ProjectConfigProvider.get().isProjectClientId("428563709008sc2oogg2l01bag31ercne0mvi4v0ffvv.apps.googleusercontent.com"));
+        assertFalse(projectConfigProvider.isProjectClientId("428563709008"));
+        assertFalse(projectConfigProvider.isProjectClientId(""));
+        assertFalse(projectConfigProvider.isProjectClientId("anystring"));
+        assertFalse(projectConfigProvider.isProjectClientId("42856370900a.apps.googleusercontent.com"));
+        assertFalse(projectConfigProvider.isProjectClientId("428563709008sc2oogg2l01bag31ercne0mvi4v0ffvv.apps.googleusercontent.com"));
 
         //client ids belonging to project
-        assertTrue(ProjectConfigProvider.get().isProjectClientId("428563709008-vvh1k92tpns1ab8qnhum5fetmk4iir47.apps.googleusercontent.com")); //old service account id
-        assertTrue(ProjectConfigProvider.get().isProjectClientId("114047436807976998329")); //new service account id
+        assertTrue(projectConfigProvider.isProjectClientId("428563709008-vvh1k92tpns1ab8qnhum5fetmk4iir47.apps.googleusercontent.com")); //old service account id
+        assertTrue(projectConfigProvider.isProjectClientId("114047436807976998329")); //new service account id
 
         //client ids non belonging
-        assertFalse(ProjectConfigProvider.get().isProjectClientId("114047436807976998328"));
-        assertFalse(ProjectConfigProvider.get().isProjectClientId("528563709008-sc2oogg2l01bag31ercne0mvi4v0ffvv.apps.googleusercontent.com"));
+        assertFalse(projectConfigProvider.isProjectClientId("114047436807976998328"));
+        assertFalse(projectConfigProvider.isProjectClientId("528563709008-sc2oogg2l01bag31ercne0mvi4v0ffvv.apps.googleusercontent.com"));
     }
 
     @Test
 	public void getCachedProjectConfig() {
-        final ProjectConfigProvider.ProjectConfig projectConfig = ProjectConfigProvider.get().getCachedProjectConfig();
+        final ProjectConfigProvider.ProjectConfig projectConfig = projectConfigProvider.getCachedProjectConfig();
         final ImmutableSet<String> roles = projectConfig.getRolesFor("user@example.com");
         assertTrue(roles.contains("someRole"));
         assertEquals("428563709008-vvh1k92tpns1ab8qnhum5fetmk4iir47.apps.googleusercontent.com",

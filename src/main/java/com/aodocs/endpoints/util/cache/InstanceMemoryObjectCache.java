@@ -51,12 +51,13 @@ class InstanceMemoryObjectCache implements ObjectCache {
 	}
 
 	@Override
-	public <T extends Serializable> T getCachedSerializable(String key, Class<T> valueClass, Function<String, T> valueFunction, int expirationInSeconds) {
+	public <T extends Serializable> T getCachedSerializable(String key, String namespace, Function<String, T> valueFunction, int expirationInSeconds) {
+		String fullKey = namespace + "/" + key;
 		try {
-			final byte[] cachedOrNew = SERIALIZED_CACHE.get(key, () -> SerializationUtils.serialize(valueFunction.apply(key)));
+			final byte[] cachedOrNew = SERIALIZED_CACHE.get(fullKey, () -> SerializationUtils.serialize(valueFunction.apply(key)));
 			return SerializationUtils.deserialize(cachedOrNew);
 		} catch (Exception e) {
-			log.log(Level.SEVERE,"Error when fetching " + valueClass.getName() + "/" + key + " from instance cache", e);
+			log.log(Level.SEVERE, "Error when fetching " + fullKey + " from instance cache", e);
 			return valueFunction.apply(key);
 		}
 	}
