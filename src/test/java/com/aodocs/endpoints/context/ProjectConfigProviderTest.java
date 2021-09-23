@@ -25,22 +25,22 @@ import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.ListServiceAccountsResponse;
 import com.google.appengine.api.utils.SystemProperty;
 import com.google.cloud.Identity;
-import com.google.cloud.Policy;
-import com.google.cloud.Role;
-import com.google.cloud.resourcemanager.Project;
-import com.google.cloud.resourcemanager.ProjectInfo;
-import com.google.cloud.resourcemanager.ResourceManager;
-import com.google.cloud.resourcemanager.testing.LocalResourceManagerHelper;
+import com.google.cloud.resourcemanager.v3.Project;
+import com.google.cloud.resourcemanager.v3.ProjectsClient;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
+import com.google.iam.v1.Binding;
+
 import lombok.SneakyThrows;
-import org.junit.After;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -50,23 +50,28 @@ import static org.mockito.Mockito.*;
  */
 public class ProjectConfigProviderTest extends AppEngineTest {
 
-    private LocalResourceManagerHelper helper = LocalResourceManagerHelper.create();
-
-    private Project project;
+    private static final String expectedProjectNumber = "1234567";
 
     @Before
     public void setUp() throws IOException {
-        helper.start();
-        final ResourceManager resourceManager = helper.getOptions().getService();
         final String appId = SystemProperty.applicationId.get();
-        project = resourceManager.create(ProjectInfo.newBuilder(appId).build());
-        resourceManager.replacePolicy(appId, Policy.newBuilder()
-                .addIdentity(Role.of("someRole"), Identity.user("user@example.com"))
-                .build());
+        String projectName = "projects/" + appId;
+        //this instance has final methods, mocking needs mock-maker-inline
+        //see src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker
+        final ProjectsClient projectsClient = mock(ProjectsClient.class, RETURNS_DEEP_STUBS);
+        when(projectsClient.getProject(projectName))
+                .thenReturn(Project.newBuilder()
+                        .setName("projects/" + expectedProjectNumber)
+                        .build());
+        when(projectsClient.getIamPolicy(projectName).getBindingsList())
+                .thenReturn(Collections.singletonList(Binding.newBuilder()
+                                .setRole("someRole")
+                                .addMembers(Identity.user("user@example.com").strValue())
+                                .build()));
         final Iam iam = mock(Iam.class, RETURNS_DEEP_STUBS);
-        when(iam.projects().serviceAccounts().list("projects/" + appId).execute())
+        when(iam.projects().serviceAccounts().list(projectName).execute())
                 .thenReturn(loadJson(ListServiceAccountsResponse.class));
-        ProjectConfigProvider.override(appId, resourceManager, iam);
+        ProjectConfigProvider.override(appId, Suppliers.ofInstance(projectsClient), iam);
     }
 
     @SneakyThrows
@@ -77,15 +82,10 @@ public class ProjectConfigProviderTest extends AppEngineTest {
         }
     }
 
-    @After
-    public void tearDown() {
-        helper.stop();
-    }
-
     @Test
     public void getProjectNumber() {
-        long projectNumber = ProjectConfigProvider.get().getProject().getProjectNumber();
-        assertEquals(project.getProjectNumber().longValue(), projectNumber);
+        String projectNumber = ProjectConfigProvider.get().getProjectNumber();
+        assertEquals(expectedProjectNumber, projectNumber);
     }
 
     @Test
