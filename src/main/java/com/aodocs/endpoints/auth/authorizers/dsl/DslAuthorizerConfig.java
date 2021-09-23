@@ -34,6 +34,8 @@ import com.aodocs.endpoints.auth.authorizers.logic.NegateAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.request.HttpMethodAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.role.ProjectMemberAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.role.ProjectOwnerAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.token.AllJwtClaimsAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.token.AnyJwtClaimAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.token.JwtOnlyAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.token.OAuth2OnlyAuthorizer;
 import com.aodocs.endpoints.storage.ClasspathStringListSupplier;
@@ -85,6 +87,8 @@ public interface DslAuthorizerConfig {
             .put("versionContains", VersionContainsAuthorizer.class)
             .put("httpMethod", HttpMethodAuthorizer.class)
             .put("clientIds", ClientIdsAuthorizer.class)
+            .put("anyJwtClaim", AnyJwtClaimAuthorizer.class)
+            .put("allJwtClaims", AllJwtClaimsAuthorizer.class)
             .build();
 
     /**
