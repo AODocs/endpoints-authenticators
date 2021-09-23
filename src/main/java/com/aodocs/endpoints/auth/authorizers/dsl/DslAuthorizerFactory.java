@@ -41,7 +41,8 @@ import com.google.common.collect.ImmutableList;
  **
  */
 public class DslAuthorizerFactory {
-    private static DslAuthorizerFactory INSTANCE = new DslAuthorizerFactory();
+    
+    private static final DslAuthorizerFactory INSTANCE = new DslAuthorizerFactory();
 
     public static DslAuthorizerFactory get() {
         return INSTANCE;

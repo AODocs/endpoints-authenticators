@@ -52,8 +52,8 @@ public class AsyncRefreshMemoizingSupplier<T> implements Supplier<T> {
 
     /**
      *
-     * @param ttlInSeconds
-     * @param supplier
+     * @param ttlInSeconds time to live
+     * @param supplier the value supplier
      */
     AsyncRefreshMemoizingSupplier(int ttlInSeconds, final Supplier<T> supplier, ThreadFactory threadFactory) {
         this(ttlInSeconds, supplier, threadFactory, null);

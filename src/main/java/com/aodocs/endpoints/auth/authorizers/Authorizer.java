@@ -31,8 +31,8 @@ public interface Authorizer {
   
   @Value
   @Builder
-  final class AuthorizationResult {
-    private final boolean authorized;
+  class AuthorizationResult {
+    boolean authorized;
     
     static AuthorizationResultBuilder builder() {
       return new AuthorizationResultBuilder();
@@ -44,7 +44,7 @@ public interface Authorizer {
    *
    * @param extendedUser    a user containing additional information
    * @param apiMethodConfig the config for the current API method
-   * @param request
+   * @param request the current http request
    * @return true to authorize, false to deny access.
    */
   AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request);

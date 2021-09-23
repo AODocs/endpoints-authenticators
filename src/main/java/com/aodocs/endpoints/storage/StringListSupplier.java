@@ -40,15 +40,15 @@ public abstract class StringListSupplier implements Supplier<List<String>> {
 
     /**
      * Remove comments (starting with #), trim and remove empty lines
-     * @param strings
-     * @return
+     * @param lines the lines
+     * @return the cleaned lines
      */
-    private List<String> clean(List<String> strings) {
-        if (strings == null) {
+    private List<String> clean(List<String> lines) {
+        if (lines == null) {
             return Collections.emptyList();
         }
         
-        return strings.stream().map(input -> {
+        return lines.stream().map(input -> {
             int commentIndex = input.indexOf("#");
             String noComment = commentIndex != -1 ? input.substring(0, commentIndex) : input;
             return noComment.trim();
