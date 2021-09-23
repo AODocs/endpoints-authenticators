@@ -2,7 +2,7 @@
  * #%L
  * Extended authenticators for Cloud Endpoints v2
  * ---
- * Copyright (C) 2018 AODocs (Altirnao Inc)
+ * Copyright (C) 2018 - 2021 AODocs (Altirnao Inc)
  * ---
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,29 @@
  */
 package com.aodocs.endpoints.auth.authorizers.token;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+import java.util.stream.Stream;
 
-import com.aodocs.endpoints.auth.AuthType;
-import com.aodocs.endpoints.auth.ExtendedUser;
-import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
-import com.google.api.server.spi.config.model.ApiMethodConfig;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Only allows JWT tokens.
+ * Checks if the token is a JWT token, and checks claims
  */
-public class JwtOnlyAuthorizer extends AbstractAuthorizer {
-
-    @Override
-    public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return new AuthorizationResult(extendedUser.getAuthType() == AuthType.JWT);
+public class AllJwtClaimsAuthorizer extends JwtClaimsAuthorizer {
+    
+    public AllJwtClaimsAuthorizer() {
+        super(Stream::allMatch);
     }
+    
+    public AllJwtClaimsAuthorizer(Map<String, Object> claims) {
+        super(Stream::allMatch);
+        setClaims(claims);
+    }
+    
+    @JsonProperty("allJwtClaims")
+    @Override
+    public JwtClaimsAuthorizer setClaims(Map<String, Object> claims) {
+        return super.setClaims(claims);
+    }
+    
 }

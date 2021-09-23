@@ -49,18 +49,21 @@ public class AuthInfo {
     List<String> audience;
     ImmutableSet<String> scopes;
     Long expiresInSeconds;
+    Object rawTokenInfo;
 
-    public AuthInfo(String token, GoogleIdToken tokenInfo) {
+    public AuthInfo(String token, GoogleIdToken idToken) {
         this.authType = AuthType.JWT;
         this.token = token;
-        this.userId = tokenInfo.getPayload().getSubject();
-        this.email = tokenInfo.getPayload().getEmail();
-        this.verifiedEmail = tokenInfo.getPayload().getEmailVerified();
-        this.hd = tokenInfo.getPayload().getHostedDomain();
-        this.clientId = tokenInfo.getPayload().getAuthorizedParty();
-        this.audience = tokenInfo.getPayload().getAudienceAsList();
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        this.userId = payload.getSubject();
+        this.email = payload.getEmail();
+        this.verifiedEmail = payload.getEmailVerified();
+        this.hd = payload.getHostedDomain();
+        this.clientId = payload.getAuthorizedParty();
+        this.audience = payload.getAudienceAsList();
         this.scopes = null;
-        this.expiresInSeconds = tokenInfo.getPayload().getExpirationTimeSeconds();
+        this.expiresInSeconds = payload.getExpirationTimeSeconds();
+        this.rawTokenInfo = idToken;
     }
 
     public AuthInfo(String token, GoogleAuth.TokenInfo tokenInfo) {
@@ -75,5 +78,6 @@ public class AuthInfo {
         this.scopes = tokenInfo.scopes != null
                 ? ImmutableSet.copyOf(Splitter.on(' ').split(tokenInfo.scopes)) : ImmutableSet.of();
         this.expiresInSeconds = tokenInfo.expiresIn == null ? 0L : tokenInfo.expiresIn;
+        this.rawTokenInfo = tokenInfo;
     }
 }

@@ -1,0 +1,4 @@
+allJwtClaims:
+  iss: "123"
+  exp: 12345
+  email_verified: true

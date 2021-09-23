@@ -1,0 +1,21 @@
+{
+  "name": "Clément Test",
+  "iss": "https://securetoken.google.com/ao-docs-staging",
+  "aud": "ao-docs-staging",
+  "auth_time": 1632390410,
+  "user_id": "zXZVDioJA1Rh1jwxc7g6uxs4hOz2",
+  "sub": "zXZVDioJA1Rh1jwxc7g6uxs4hOz2",
+  "iat": 1633696506,
+  "exp": 1633700106,
+  "email": "vitob14022@tst999.com",
+  "email_verified": false,
+  "firebase": {
+    "identities": {
+      "email": [
+        "vitob14022@tst999.com"
+      ]
+    },
+    "sign_in_provider": "password"
+  },
+  "nullClaim": null
+}
