@@ -56,11 +56,11 @@ class AppEngineMemcacheObjectCache implements ObjectCache {
 
     @Override
     public <T extends Serializable> T getCachedSerializable(
-            String key, Class<T> valueClass,
+            String key, String namespace,
             Function<String, T> valueFunction,
             int  expirationInSeconds) {
         try {
-            MemcacheService memcacheService = MemcacheServiceFactory.getMemcacheService(valueClass.getName());
+            MemcacheService memcacheService = MemcacheServiceFactory.getMemcacheService(namespace);
             T value = (T) memcacheService.get(key);
             if (value != null) {
                 return value;
@@ -69,7 +69,7 @@ class AppEngineMemcacheObjectCache implements ObjectCache {
             memcacheService.put(key, value, Expiration.byDeltaSeconds(expirationInSeconds));
             return value;
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error when fetching " + valueClass.getName() + "/" + key + " from memcache", e);
+            log.log(Level.SEVERE, "Error when fetching " + namespace + "/" + key + " from memcache", e);
             return valueFunction.apply(key);
         }
     }
