@@ -72,8 +72,7 @@ import com.google.common.collect.ImmutableMap;
  * TODO make this extensible by third parties.
  */
 public interface DslAuthorizerConfig {
-
-
+    
     /**
      * ExtendedAuthorizers represented as objects in the DSL, determined by a discriminator property.
      */

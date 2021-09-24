@@ -39,16 +39,16 @@ import java.util.List;
 @AllArgsConstructor
 public class AuthInfo {
 
-    private AuthType authType;
-    private String token;
-    private String userId;
-    private String email;
-    private Boolean verifiedEmail;
-    private String hd;
-    private String clientId;
-    private List<String> audience;
-    private ImmutableSet<String> scopes;
-    private Long expiresInSeconds;
+    AuthType authType;
+    String token;
+    String userId;
+    String email;
+    Boolean verifiedEmail;
+    String hd;
+    String clientId;
+    List<String> audience;
+    ImmutableSet<String> scopes;
+    Long expiresInSeconds;
 
     public AuthInfo(String token, GoogleIdToken tokenInfo) {
         this.authType = AuthType.JWT;

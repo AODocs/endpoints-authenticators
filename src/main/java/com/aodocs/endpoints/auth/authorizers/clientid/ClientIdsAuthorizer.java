@@ -39,7 +39,7 @@ import java.util.List;
  * This authenticator allows any token issued by a client id in the provided list.
  */
 public final class ClientIdsAuthorizer extends AbstractAuthorizer {
-    private static FluentLogger logger = FluentLogger.forEnclosingClass();
+    private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
     @JsonProperty("clientIds")
     @Getter

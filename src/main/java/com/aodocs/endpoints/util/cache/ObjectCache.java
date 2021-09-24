@@ -40,7 +40,7 @@ public interface ObjectCache {
 			int expirationInSeconds);
 
 	<T extends Serializable> T getCachedSerializable(
-			String key, Class<T> valueClass,
+			String key, String namespace,
 			Function<String, T> valueFunction,
 			int  expirationInSeconds);
 
