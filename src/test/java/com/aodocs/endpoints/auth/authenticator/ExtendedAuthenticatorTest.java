@@ -40,13 +40,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -67,9 +67,6 @@ public class ExtendedAuthenticatorTest {
     
     @Mock
     Authenticator delegate;
-    
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -139,8 +136,7 @@ public class ExtendedAuthenticatorTest {
         
         TestAuthenticator authenticator = new TestAuthenticator(delegate, new PassthroughsAuthorizer());
         
-        thrown.expect(ServiceException.class);
-        authenticator.authenticate(request);
+        assertThrows(ServiceException.class, () -> authenticator.authenticate(request));
     }
     
     @Test

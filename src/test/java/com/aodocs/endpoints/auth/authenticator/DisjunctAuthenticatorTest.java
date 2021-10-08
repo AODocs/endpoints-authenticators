@@ -23,24 +23,20 @@ import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.response.ServiceUnavailableException;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
 public class DisjunctAuthenticatorTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void testAtLeastOneDelegateIsMandatory() {
-        expectedException.expect(NullPointerException.class);
-        new DisjunctAuthenticator(null);
+        assertThrows(NullPointerException.class, () -> new DisjunctAuthenticator(null));
 
         //Valid
         Authenticator delegate = mock(Authenticator.class);
