@@ -45,7 +45,7 @@ public final class ServletPathAuthorizer extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(normalize(request.getServletPath()).equals(normalize(servletPath))).build();
+        return new AuthorizationResult(normalize(request.getServletPath()).equals(normalize(servletPath)));
     }
 
     private String normalize(String path) {

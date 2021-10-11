@@ -54,6 +54,6 @@ public final class QueryParameterValueAuthorizer extends AbstractAuthorizer {
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
         String parameter = request.getParameter(paramName);
-        return newResultBuilder().authorized(parameter == null ? allowIfAbsent : valuesSupplier.get().contains(parameter)).build();
+        return new AuthorizationResult(parameter == null ? allowIfAbsent : valuesSupplier.get().contains(parameter));
     }
 }

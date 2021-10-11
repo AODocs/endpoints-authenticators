@@ -33,6 +33,6 @@ public final class JwtOnlyAuthorizer extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.JWT).build();
+        return new AuthorizationResult(extendedUser.getAuthType() == AuthType.JWT);
     }
 }

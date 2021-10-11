@@ -43,6 +43,6 @@ public final class QueryParameterAuthorizer extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(!Strings.isNullOrEmpty(request.getParameter(requiredQueryParam))).build();
+        return new AuthorizationResult(!Strings.isNullOrEmpty(request.getParameter(requiredQueryParam)));
     }
 }

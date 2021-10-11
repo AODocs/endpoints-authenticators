@@ -54,6 +54,6 @@ public final class ConjunctAuthorizer extends AbstractAuthorizer {
         boolean authorized = authorizers.stream()
                 .map(input -> input.isAuthorized(extendedUser, methodConfig, request))
                 .allMatch(AuthorizationResult::isAuthorized);
-        return newResultBuilder().authorized(authorized).build();
+        return new AuthorizationResult(authorized);
     }
 }

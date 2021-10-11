@@ -45,6 +45,6 @@ public final class NegateAuthorizer extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(!authorizer.isAuthorized(extendedUser, apiMethodConfig, request).isAuthorized()).build();
+        return new AuthorizationResult(!authorizer.isAuthorized(extendedUser, apiMethodConfig, request).isAuthorized());
     }
 }

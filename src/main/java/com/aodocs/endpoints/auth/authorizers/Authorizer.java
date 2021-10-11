@@ -30,12 +30,15 @@ import com.google.api.server.spi.config.model.ApiMethodConfig;
 public interface Authorizer {
   
   @Value
-  @Builder
   class AuthorizationResult {
     boolean authorized;
-    
-    static AuthorizationResultBuilder builder() {
-      return new AuthorizationResultBuilder();
+  
+    public static AuthorizationResult authorized() {
+      return new AuthorizationResult(true);
+    }
+  
+    public static AuthorizationResult notAuthorized() {
+      return new AuthorizationResult(false);
     }
   }
 

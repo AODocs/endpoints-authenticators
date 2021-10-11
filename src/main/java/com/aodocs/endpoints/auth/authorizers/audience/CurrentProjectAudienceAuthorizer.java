@@ -34,6 +34,6 @@ public final class CurrentProjectAudienceAuthorizer extends AbstractAuthorizer {
 	public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
 		String projectId = ProjectConfigProvider.get().getProject().getProjectId();
 		List<String> audience = extendedUser.getAudience();
-		return newResultBuilder().authorized(audience != null && audience.contains(projectId)).build();
+		return new AuthorizationResult(audience != null && audience.contains(projectId));
 	}
 }

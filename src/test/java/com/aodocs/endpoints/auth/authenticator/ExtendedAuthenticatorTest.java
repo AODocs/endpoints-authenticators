@@ -109,7 +109,7 @@ public class ExtendedAuthenticatorTest {
     static class PassthroughsAuthorizer extends AbstractAuthorizer {
         @Override
         public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-            return newResultBuilder().authorized(true).build();
+            return AuthorizationResult.authorized();
         }
     }
     
@@ -117,7 +117,7 @@ public class ExtendedAuthenticatorTest {
     
         @Override
         public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-            return newResultBuilder().authorized(false).build();
+            return AuthorizationResult.notAuthorized();
         }
     }
     

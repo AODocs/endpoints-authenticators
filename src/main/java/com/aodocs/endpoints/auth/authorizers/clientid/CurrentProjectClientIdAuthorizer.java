@@ -34,9 +34,9 @@ public final class CurrentProjectClientIdAuthorizer extends AbstractAuthorizer {
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
         String clientId = extendedUser.getAuthInfo().getClientId();
         if (clientId == null) {
-            return newResultBuilder().authorized(false).build();
+            return AuthorizationResult.notAuthorized();
         }
     
-        return newResultBuilder().authorized(ProjectConfigProvider.get().isProjectClientId(clientId)).build();
+        return new AuthorizationResult(ProjectConfigProvider.get().isProjectClientId(clientId));
     }
 }

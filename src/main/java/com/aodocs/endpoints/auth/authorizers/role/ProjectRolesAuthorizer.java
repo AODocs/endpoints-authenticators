@@ -40,7 +40,7 @@ public abstract class ProjectRolesAuthorizer extends AbstractAuthorizer {
     public final AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
         ImmutableSet<String> userRoles =
                 ProjectConfigProvider.get().getCachedProjectConfig().getRolesFor(extendedUser.getEmail());
-        return newResultBuilder().authorized(authorizeRoles(Optional.ofNullable(userRoles).orElse(ImmutableSet.of()))).build();
+        return new AuthorizationResult(authorizeRoles(Optional.ofNullable(userRoles).orElse(ImmutableSet.of())));
     }
 
     protected abstract boolean authorizeRoles(@Nonnull ImmutableSet<String> userRoles);

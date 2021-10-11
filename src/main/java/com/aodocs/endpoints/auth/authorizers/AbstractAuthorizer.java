@@ -21,7 +21,4 @@ package com.aodocs.endpoints.auth.authorizers;
 
 public abstract class AbstractAuthorizer implements Authorizer {
   
-  protected final AuthorizationResult.AuthorizationResultBuilder newResultBuilder() {
-    return AuthorizationResult.builder();
-  }
 }

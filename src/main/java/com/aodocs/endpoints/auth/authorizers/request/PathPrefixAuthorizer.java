@@ -45,7 +45,7 @@ public final class PathPrefixAuthorizer extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(normalize(request.getPathInfo()).startsWith(normalize(pathPrefix))).build();
+        return new AuthorizationResult(normalize(request.getPathInfo()).startsWith(normalize(pathPrefix)));
     }
 
     private String normalize(String path) {

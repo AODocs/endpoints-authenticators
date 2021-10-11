@@ -33,6 +33,6 @@ public final class OAuth2OnlyAuthorizer extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(extendedUser.getAuthType() == AuthType.OAUTH2).build();
+        return new AuthorizationResult(extendedUser.getAuthType() == AuthType.OAUTH2);
     }
 }

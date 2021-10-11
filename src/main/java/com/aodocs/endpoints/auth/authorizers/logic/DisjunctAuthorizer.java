@@ -56,7 +56,7 @@ public final class DisjunctAuthorizer extends AbstractAuthorizer {
         boolean authorized = authorizers.stream()
                 .map(input -> input.isAuthorized(extendedUser, methodConfig, request))
                 .anyMatch(AuthorizationResult::isAuthorized);
-        return newResultBuilder().authorized(authorized).build();
+        return new AuthorizationResult(authorized);
     }
 
 }

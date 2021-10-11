@@ -33,7 +33,7 @@ abstract class VersionAuthorizer extends AbstractAuthorizer {
     @Override
     public final AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig apiMethodConfig, HttpServletRequest request) {
         //version is a standard metric, no need to add it
-        return newResultBuilder().authorized(isAuthorized(apiMethodConfig.getApiClassConfig().getApiConfig().getVersion())).build();
+        return new AuthorizationResult(isAuthorized(apiMethodConfig.getApiClassConfig().getApiConfig().getVersion()));
     }
 
     protected abstract boolean isAuthorized(String version);

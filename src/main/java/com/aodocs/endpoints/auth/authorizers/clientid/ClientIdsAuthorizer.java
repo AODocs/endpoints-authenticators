@@ -53,11 +53,11 @@ public final class ClientIdsAuthorizer extends AbstractAuthorizer {
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
         String clientId = extendedUser.getAuthInfo().getClientId();
         if (clientId == null) {
-            return newResultBuilder().authorized(false).build();
+            return AuthorizationResult.notAuthorized();
         }
         
         List<String> allowedClientIds = clientIdSupplier.get();
         logger.atFine().log("Class=%s, ClientId=%s, Allowed=%s", getClass(), clientId, allowedClientIds);
-        return newResultBuilder().authorized(clientIdSupplier.get().contains(clientId)).build();
+        return new AuthorizationResult(clientIdSupplier.get().contains(clientId));
     }
 }

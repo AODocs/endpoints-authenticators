@@ -48,6 +48,6 @@ public final class HttpMethodAuthorizer extends AbstractAuthorizer {
 
     @Override
     public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-        return newResultBuilder().authorized(methodConfig.getHttpMethod().equalsIgnoreCase(httpMethod.name())).build();
+        return new AuthorizationResult(methodConfig.getHttpMethod().equalsIgnoreCase(httpMethod.name()));
     }
 }
