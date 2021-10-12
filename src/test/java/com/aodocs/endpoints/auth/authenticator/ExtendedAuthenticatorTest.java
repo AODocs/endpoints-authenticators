@@ -35,9 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import lombok.extern.java.Log;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -57,13 +55,12 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class ExtendedAuthenticatorTest {
 
-    private LocalServiceTestHelper helper =
+    private final LocalServiceTestHelper helper =
             new LocalServiceTestHelper(new LocalURLFetchServiceTestConfig());
     @Mock
     protected ApiMethodConfig config;
 
     private MockHttpServletRequest request;
-    private Attribute attr;
     
     @Mock
     Authenticator delegate;
@@ -72,7 +69,7 @@ public class ExtendedAuthenticatorTest {
     public void setUp() {
         helper.setUp();
         request = new MockHttpServletRequest();
-        attr = Attribute.from(request);
+        Attribute attr = Attribute.from(request);
         attr.set(Attribute.API_METHOD_CONFIG, config);
         System.setProperty(EnvUtil.ENV_APPENGINE_RUNTIME, "Production");
     }
