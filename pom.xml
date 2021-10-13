@@ -275,6 +275,9 @@
                     <canUpdateDescription>true</canUpdateDescription>
                     <canUpdateLicense>true</canUpdateLicense>
                     <sectionDelimiter>---</sectionDelimiter>
+                    <includes>
+                        **/*.java
+                    </includes>
                 </configuration>
                 <executions>
                     <execution>
@@ -285,9 +288,6 @@
                         <configuration>
                             <failOnMissingHeader>true</failOnMissingHeader>
                             <failOnNotUptodateHeader>false</failOnNotUptodateHeader>
-                            <includes>
-                                **/*.java
-                            </includes>
                         </configuration>
                     </execution>
                 </executions>

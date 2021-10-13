@@ -2,7 +2,7 @@
  * #%L
  * Extended authenticators for Cloud Endpoints v2
  * ---
- * Copyright (C) 2018 AODocs (Altirnao Inc)
+ * Copyright (C) 2018 - 2021 AODocs (Altirnao Inc)
  * ---
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
