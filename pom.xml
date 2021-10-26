@@ -38,7 +38,7 @@
 
         <endpoints-authenticators.scm.connection>git@github.com:AODocs/endpoints-authenticators.git</endpoints-authenticators.scm.connection>
         <endpoints-authenticators.scm.url>https://github.com/AODocs/endpoints-authenticators</endpoints-authenticators.scm.url>
-        <flogger.version>0.6</flogger.version>
+        <flogger.version>0.7.1</flogger.version>
     </properties>
 
     <dependencyManagement>
@@ -80,7 +80,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
+            <version>1.18.22</version>
         </dependency>
         
         <!--Jackson-->
@@ -121,7 +121,7 @@
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-iam</artifactId>
-            <version>v1-rev20210909-1.32.1</version>
+            <version>v1-rev20210918-1.32.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
