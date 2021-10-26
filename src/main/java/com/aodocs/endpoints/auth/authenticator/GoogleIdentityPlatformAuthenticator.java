@@ -92,10 +92,10 @@ public class GoogleIdentityPlatformAuthenticator implements Authenticator {
 	 * 
 	 * WARNING! If projectIds is empty, this instance will allow ALL Identity Platform JWT token, regardless of the issuing project.
 	 * You should always validate the project id by checking the following claims:
-	 * - iss: should be "https://securetoken.google.com/${PROJECT_ID}" ({@see ISSUER_PREFIX}
-	 * - aud: should be exactly "${PROJECT_ID}}
-	 * The JWT claim validation can be done using {@see com.aodocs.endpoints.auth.authorizers.audience.CurrentProjectAudienceAuthorizer} or
-	 * {@see com.aodocs.endpoints.auth.authorizers.token.JwtClaimsAuthorizer}.
+	 * - iss: should be "https://securetoken.google.com/${PROJECT_ID}" ({@link ISSUER_PREFIX})
+	 * - aud: should be exactly "${PROJECT_ID}"
+	 * The JWT claim validation can be done using {@link com.aodocs.endpoints.auth.authorizers.audience.CurrentProjectAudienceAuthorizer} or
+	 * {@link com.aodocs.endpoints.auth.authorizers.token.JwtClaimsAuthorizer}.
 	 * 
 	 * @param projectIds the project IDs to check tokens for
 	 */
