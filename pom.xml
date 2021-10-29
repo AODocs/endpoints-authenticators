@@ -32,7 +32,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <endpoints-framework.version>2.5.0</endpoints-framework.version>
+        <endpoints-framework.version>2.5.1</endpoints-framework.version>
 
         <gae.version>1.9.91</gae.version>
 
