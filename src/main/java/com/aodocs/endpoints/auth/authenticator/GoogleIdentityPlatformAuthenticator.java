@@ -44,6 +44,7 @@ import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.config.Singleton;
 import com.google.api.server.spi.request.Attribute;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.flogger.FluentLogger;
 
 /**
  * This Authenticator validates the JWT tokens issued by the Google Identity Platform (aka Firebase Auth).
@@ -56,6 +57,7 @@ import com.google.common.annotations.VisibleForTesting;
 @Log
 @Singleton
 public class GoogleIdentityPlatformAuthenticator implements Authenticator {
+	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	
 	/**
 	 * See Firebase documentation for more information.
@@ -140,7 +142,10 @@ public class GoogleIdentityPlatformAuthenticator implements Authenticator {
 		if (attr.isEnabled(Attribute.REQUIRE_APPENGINE_USER)) {
 			com.google.appengine.api.users.User appEngineUser =
 					(email == null) ? null : new com.google.appengine.api.users.User(email, "");
+			logger.atInfo().log("appEngineUser = %s", appEngineUser);
 			attr.set(Attribute.AUTHENTICATED_APPENGINE_USER, appEngineUser);
+		} else {
+			logger.atInfo().log("user = %s", user);
 		}
 		return user;
 	}
