@@ -30,9 +30,10 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.aodocs.endpoints.auth.AuthInfo;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.aodocs.endpoints.auth.authorizers.dsl.DslAuthorizerFactory;
-import com.google.api.client.auth.openidconnect.IdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.server.spi.Client;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
@@ -60,7 +61,7 @@ public class JwtClaimsAuthorizerTest {
 				"email_verified", false, //valid
 				"exp", 1633700106L //valid
 				));
-		boolean valid = allClaims.checkJwtClaims(loadPayload());
+		boolean valid = allClaims.checkJwtClaims(loadAuthInfo());
 		assertTrue(valid);
 	}
 	
@@ -71,7 +72,7 @@ public class JwtClaimsAuthorizerTest {
 				"email_verified", true, //invalid
 				"exp", "azfefzefzrgf" //invalid
 		));
-		boolean valid = allClaims.checkJwtClaims(loadPayload());
+		boolean valid = allClaims.checkJwtClaims(loadAuthInfo());
 		assertTrue(valid);
 	}
 	
@@ -82,7 +83,7 @@ public class JwtClaimsAuthorizerTest {
 				"email_verified", true, //invalid
 				"exp", "azfefzefzrgf" //invalid
 		));
-		boolean valid = allClaims.checkJwtClaims(loadPayload());
+		boolean valid = allClaims.checkJwtClaims(loadAuthInfo());
 		assertFalse(valid);
 	}
 	
@@ -93,7 +94,7 @@ public class JwtClaimsAuthorizerTest {
 				"email_verified", true, //invalid
 				"exp", "azfefzefzrgf" //invalid
 		));
-		boolean valid = allClaims.checkJwtClaims(loadPayload());
+		boolean valid = allClaims.checkJwtClaims(loadAuthInfo());
 		assertFalse(valid);
 	}
 	
@@ -104,7 +105,7 @@ public class JwtClaimsAuthorizerTest {
 				"firebase/identities/email/0", "vitob14022@tst999.com", //valid
 				"email_verified", false //valid
 		));
-		boolean valid = allClaims.checkJwtClaims(loadPayload());
+		boolean valid = allClaims.checkJwtClaims(loadAuthInfo());
 		assertTrue(valid);
 	}
 	
@@ -112,14 +113,14 @@ public class JwtClaimsAuthorizerTest {
 	public void testUnsupportedArray() throws IOException {
 		assertFalse( new AllJwtClaimsAuthorizer(ImmutableMap.of(
 				"firebase/identities/email", "vitob14022@tst999.com" //valid
-		)).checkJwtClaims(loadPayload()));
+		)).checkJwtClaims(loadAuthInfo()));
 	}
 	
 	@Test
 	public void testUnsupportedObject() throws IOException {
 		assertFalse(new AllJwtClaimsAuthorizer(ImmutableMap.of(
 				"firebase", "vitob14022@tst999.com" //valid
-		)).checkJwtClaims(loadPayload()));
+		)).checkJwtClaims(loadAuthInfo()));
 	}
 	
 	@Test
@@ -127,7 +128,7 @@ public class JwtClaimsAuthorizerTest {
 		JwtClaimsAuthorizer allClaims = new AllJwtClaimsAuthorizer(Collections.singletonMap(
 				"nullClaim", null
 		));
-		boolean valid = allClaims.checkJwtClaims(loadPayload());
+		boolean valid = allClaims.checkJwtClaims(loadAuthInfo());
 		assertTrue(valid);
 	}
 	
@@ -136,7 +137,7 @@ public class JwtClaimsAuthorizerTest {
 		JwtClaimsAuthorizer allClaims = new AllJwtClaimsAuthorizer(Collections.singletonMap(
 				"doesnotexist", null
 		));
-		boolean valid = allClaims.checkJwtClaims(loadPayload());
+		boolean valid = allClaims.checkJwtClaims(loadAuthInfo());
 		assertTrue(valid);
 	}
 	
@@ -145,7 +146,9 @@ public class JwtClaimsAuthorizerTest {
 				.build(Resources.toString(Resources.getResource("jwtClaims/" + resourceName + ".yaml"), StandardCharsets.UTF_8), DslAuthorizerFactory.Format.YAML);
 	}
 	
-	private IdToken.Payload loadPayload() throws IOException {
-		return Client.getInstance().getJsonFactory().fromInputStream(Resources.getResource("jwtClaims/payload.json").openStream(), IdToken.Payload.class);
+	private AuthInfo loadAuthInfo() throws IOException {
+		String encodedToken = Resources.toString(Resources.getResource("jwtClaims/payload.json-encoded.txt"), StandardCharsets.UTF_8);
+		GoogleIdToken idToken = GoogleIdToken.parse(Client.getInstance().getJsonFactory(), encodedToken);
+		return new AuthInfo(encodedToken, idToken);
 	}
 }
