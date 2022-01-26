@@ -19,17 +19,28 @@
  */
 package com.aodocs.endpoints.auth;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.SneakyThrows;
+import lombok.Value;
+import lombok.extern.java.Log;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.server.spi.auth.GoogleAuth;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  *  Common data for access and id tokens
@@ -37,6 +48,7 @@ import java.util.List;
 @Value
 @Builder
 @AllArgsConstructor
+@Log
 public class AuthInfo {
 
     AuthType authType;
@@ -50,7 +62,52 @@ public class AuthInfo {
     ImmutableSet<String> scopes;
     Long expiresInSeconds;
     Object rawTokenInfo;
-
+    Claims claims;
+    
+    @AllArgsConstructor(access = AccessLevel.PACKAGE)
+    public final static class Claims {
+        private JsonNode payload;
+    
+        /**
+         * Extract the given claim from the token.
+         *
+         * This method extract claims that have primitive value only (boolean, numerical and string). For any other
+         * types (object, array, binary) this method returns empty.
+         *
+         * @param key A jsonp key pointing the claim to extract (for example {@code \iss} to query the issuer, or {code \firebase\tenant} to query
+         *            the tenant id for a firebase token.
+         * @return {@code null} if the key points to a non-primitive object ; {@link Optional#empty()} If the claim is not present in the token or present with null value.
+         */
+        public Optional<Object> get(String key) {
+            //make the key a valid json pointer
+            if (!key.startsWith("/")) {
+                key = "/" + key;
+            }
+            JsonNode node = payload.at(key);
+            JsonNodeType nodeType = node.getNodeType();
+            switch (nodeType) {
+                case BOOLEAN:
+                    return Optional.of(node.asBoolean());
+                case NUMBER:
+                    return Optional.of(node.asLong());
+                case STRING:
+                    return Optional.of(node.asText());
+                case NULL:
+                case MISSING:
+                    return Optional.empty();
+                case OBJECT:
+                case POJO:
+                case ARRAY:
+                case BINARY:
+                    log.log(Level.WARNING,
+                            "Please extract primitive type claim only. Node at ''{0}'' is of type=''{1}'' with the content ''{2}''",
+                            new Object[] {key, nodeType, node});
+            }
+            return null;
+        }
+    }
+    
+    @SneakyThrows(JsonProcessingException.class)
     public AuthInfo(String token, GoogleIdToken idToken) {
         this.authType = AuthType.JWT;
         this.token = token;
@@ -64,6 +121,7 @@ public class AuthInfo {
         this.scopes = null;
         this.expiresInSeconds = payload.getExpirationTimeSeconds();
         this.rawTokenInfo = idToken;
+        this.claims = new Claims(new ObjectMapper().readTree(payload.toString()));
     }
 
     public AuthInfo(String token, GoogleAuth.TokenInfo tokenInfo) {
@@ -79,5 +137,6 @@ public class AuthInfo {
                 ? ImmutableSet.copyOf(Splitter.on(' ').split(tokenInfo.scopes)) : ImmutableSet.of();
         this.expiresInSeconds = tokenInfo.expiresIn == null ? 0L : tokenInfo.expiresIn;
         this.rawTokenInfo = tokenInfo;
+        this.claims = new Claims(new ObjectMapper().createObjectNode());
     }
 }
