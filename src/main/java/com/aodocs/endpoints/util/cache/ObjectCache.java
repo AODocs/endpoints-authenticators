@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.function.Function;
 
 /**
- * A cache fro JSON serializable or serializable objects.
+ * A cache for JSON serializable or serializable objects.
  * The cache operation MUST clone the objects (not reuse instances).
  */
 public interface ObjectCache {
