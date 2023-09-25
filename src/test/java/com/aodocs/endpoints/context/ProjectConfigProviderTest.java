@@ -69,7 +69,7 @@ public class ProjectConfigProviderTest extends AppEngineTest {
                                 .addMembers(Identity.user("user@example.com").strValue())
                                 .build()));
         final Iam iam = mock(Iam.class, RETURNS_DEEP_STUBS);
-        when(iam.projects().serviceAccounts().list(projectName).execute())
+        when(iam.projects().serviceAccounts().list(eq(projectName)).setPageToken(isNull()).execute())
                 .thenReturn(loadJson(ListServiceAccountsResponse.class));
         projectConfigProvider = new ProjectConfigProvider(appId) {
             @Override

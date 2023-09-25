@@ -45,10 +45,7 @@ import lombok.extern.java.Log;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -223,8 +220,15 @@ public class ProjectConfigProvider {
 
 	@SneakyThrows
 	private ListServiceAccountsResponse listServiceAccounts() {
-    	//TODO handle service account list exceeding default page size
-		return getIamClient().projects().serviceAccounts().list(projectName).execute();
-	}
+		List<ServiceAccount> result = new ArrayList<>();
+		String nextPageToken = null;
+		do {
+			ListServiceAccountsResponse response = getIamClient().projects().serviceAccounts().list(projectName)
+					.setPageToken(nextPageToken).execute();
+			result.addAll(response.getAccounts());
+			nextPageToken = response.getNextPageToken();
+		} while (nextPageToken != null);
 
+		return new ListServiceAccountsResponse().setAccounts(result);
+	}
 }
