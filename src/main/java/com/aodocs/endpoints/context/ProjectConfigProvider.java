@@ -225,7 +225,9 @@ public class ProjectConfigProvider {
 		do {
 			ListServiceAccountsResponse response = getIamClient().projects().serviceAccounts().list(projectName)
 					.setPageToken(nextPageToken).execute();
-			result.addAll(response.getAccounts());
+			if (response.getAccounts() != null) {
+				result.addAll(response.getAccounts());
+			}
 			nextPageToken = response.getNextPageToken();
 		} while (nextPageToken != null);
 
