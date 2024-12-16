@@ -52,7 +52,8 @@ public class DslAuthorizerFactoryTest {
             httpMethod(HttpMethodAuthorizer.HttpMethod.GET),
             not(versionContains("beta")),
             versionMatches("prod"),
-            clientIds(DatastoreStringListSupplier.builder().kind("A").ttlInSeconds(60).build())
+            clientIds(DatastoreStringListSupplier.builder().kind("A").ttlInSeconds(60).build()),
+            entraIdAppIds(DatastoreStringListSupplier.builder().kind("B").ttlInSeconds(60).build())
     );
 
     private Storage storage = LocalStorageHelper.getOptions().getService();

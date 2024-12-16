@@ -21,6 +21,7 @@ package com.aodocs.endpoints.auth.authorizers.combined;
 
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.clientIds;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.currentProjectClientId;
+import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.entraIdAppIds;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.not;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.or;
 import static com.aodocs.endpoints.auth.authorizers.AuthorizerBuilder.projects;
@@ -61,10 +62,12 @@ public class WhitelistBlacklistAuthorizer implements Authorizer {
                 or(
                         currentProjectClientId(),
                         clientIds(slb.whitelist("clientIds")),
+                        entraIdAppIds(slb.whitelist("entra-id-appids")),
                         projects(slb.whitelist("projects"))
                 ),
                 not(or(
                         clientIds(slb.blacklist("clientIds")),
+                        entraIdAppIds(slb.blacklist("entra-id-appids")),
                         projects(slb.blacklist("projects"))
                 ))
         );

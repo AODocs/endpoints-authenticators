@@ -2,7 +2,7 @@
  * #%L
  * Extended authenticators for Cloud Endpoints v2
  * ---
- * Copyright (C) 2018 - 2021 AODocs (Altirnao Inc)
+ * Copyright (C) 2018 - 2024 AODocs (Altirnao Inc)
  * ---
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package com.aodocs.endpoints.auth.authorizers.clientid;
+package com.aodocs.endpoints.auth.authorizers.audience;
 
 import java.util.List;
 
@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.NonNull;
 
+import com.aodocs.endpoints.auth.AuthInfo;
+import com.aodocs.endpoints.auth.AuthType;
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.AbstractAuthorizer;
 import com.aodocs.endpoints.storage.StringListSupplier;
@@ -35,29 +37,33 @@ import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.common.flogger.FluentLogger;
 
 /**
- * This authenticator allows any token issued by a client id in the provided list.
+ * This authenticator allows any Microsoft OAuth2 token issued by an Entra ID application ID in the provided list.
  */
-public final class ClientIdsAuthorizer extends AbstractAuthorizer {
+public class EntraIdApplicationAuthorizer extends AbstractAuthorizer {
 	
 	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	
-	@JsonProperty("clientIds")
+	@JsonProperty("entra-id-appids")
 	@Getter
-	private final StringListSupplier clientIdSupplier;
+	private final StringListSupplier appIdSupplier;
 	
 	@JsonCreator
-	public ClientIdsAuthorizer(@NonNull StringListSupplier clientIdSupplier) {
-		this.clientIdSupplier = clientIdSupplier;
+	public EntraIdApplicationAuthorizer(@NonNull StringListSupplier appIdSupplier) {
+		this.appIdSupplier = appIdSupplier;
 	}
 	
 	public AuthorizationResult isAuthorized(ExtendedUser extendedUser, ApiMethodConfig methodConfig, HttpServletRequest request) {
-		String clientId = extendedUser.getAuthInfo().getClientId();
-		if (clientId == null) {
+		AuthInfo authInfo = extendedUser.getAuthInfo();
+		if (AuthType.MS_OAUTH2 != authInfo.getAuthType()) {
+			return AuthorizationResult.notAuthorized();
+		}
+		List<String> allowedAppIds = appIdSupplier.get();
+		List<String> audience = authInfo.getAudience();
+		if (audience == null || audience.isEmpty()) {
 			return AuthorizationResult.notAuthorized();
 		}
 		
-		List<String> allowedClientIds = clientIdSupplier.get();
-		logger.atFine().log("Class=%s, ClientId=%s, Allowed=%s", getClass(), clientId, allowedClientIds);
-		return new AuthorizationResult(clientIdSupplier.get().contains(clientId));
+		logger.atFine().log("Class=%s, Audience=%s, Allowed=%s", getClass(), audience.get(0), allowedAppIds);
+		return new AuthorizationResult(allowedAppIds.contains(audience.get(0)));
 	}
 }

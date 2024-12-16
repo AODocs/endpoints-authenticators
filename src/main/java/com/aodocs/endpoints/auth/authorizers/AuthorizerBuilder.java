@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 
 import lombok.NonNull;
 
+import com.aodocs.endpoints.auth.authorizers.audience.EntraIdApplicationAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.CurrentProjectClientIdAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.ProjectsAuthorizer;
@@ -85,6 +86,13 @@ public class AuthorizerBuilder {
      */
     public static ClientIdsAuthorizer clientIds(StringListSupplier clientIdSupplier) {
         return new ClientIdsAuthorizer(clientIdSupplier);
+    }
+    
+    /**
+     * Checks if the Entra ID application ID used for authentication is in the provided list.
+     */
+    public static EntraIdApplicationAuthorizer entraIdAppIds(StringListSupplier appIdSupplier) {
+        return new EntraIdApplicationAuthorizer(appIdSupplier);
     }
 
     /**

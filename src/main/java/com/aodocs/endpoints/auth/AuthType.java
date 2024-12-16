@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.aodocs.endpoints.auth.authenticator.MicrosoftOAuth2Authenticator;
 import com.google.api.server.spi.auth.GoogleJwtAuthenticator;
 import com.google.api.server.spi.auth.GoogleOAuth2Authenticator;
 import com.google.api.server.spi.auth.common.User;
@@ -51,6 +52,16 @@ public enum AuthType {
             return new GoogleJwtAuthenticator().authenticate(request);
         }
 
+    },
+    
+    /**
+     * Microsoft OAuth2 JWT authentication (no authorization, only authentication)
+     */
+    MS_OAUTH2 {
+        @Override
+        public User authenticate(HttpServletRequest request) {
+            return new MicrosoftOAuth2Authenticator().authenticate(request);
+        }
     };
 
     //TODO support ESP authenticator
