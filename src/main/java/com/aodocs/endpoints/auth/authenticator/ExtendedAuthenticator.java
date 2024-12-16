@@ -27,8 +27,10 @@ import lombok.NonNull;
 import lombok.extern.java.Log;
 
 import com.aodocs.endpoints.auth.AuthInfo;
+import com.aodocs.endpoints.auth.CustomAttribute;
 import com.aodocs.endpoints.auth.ExtendedUser;
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
+import com.aodocs.endpoints.auth.authenticator.microsoft.MicrosoftIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.EndpointsAuthenticator;
@@ -128,13 +130,17 @@ public class ExtendedAuthenticator implements Authenticator {
     AuthInfo getAuthInfo(HttpServletRequest request) {
         String token = GoogleAuth.getAuthToken(request);
         
-        //The user was authenticated with either one of the two.
         final GoogleAuth.TokenInfo tokenInfo = (GoogleAuth.TokenInfo) request.getAttribute(Attribute.TOKEN_INFO);
         if (tokenInfo != null) {
             return new AuthInfo(token, tokenInfo);
         }
     
-        final GoogleIdToken tokenId = (GoogleIdToken) request.getAttribute(Attribute.ID_TOKEN);
-        return new AuthInfo(token, tokenId);
+        final GoogleIdToken idToken = (GoogleIdToken) request.getAttribute(Attribute.ID_TOKEN);
+        if (idToken != null) {
+            return new AuthInfo(token, idToken);
+        }
+        
+        final MicrosoftIdToken microsoftIdToken = (MicrosoftIdToken) request.getAttribute(CustomAttribute.MICROSOFT_ID_TOKEN);
+        return new AuthInfo(token, microsoftIdToken);
     }
 }
