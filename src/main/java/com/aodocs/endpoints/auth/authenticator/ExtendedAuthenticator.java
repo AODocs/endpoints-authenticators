@@ -34,6 +34,7 @@ import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.EndpointsAuthenticator;
 import com.google.api.server.spi.auth.GoogleAuth;
 import com.google.api.server.spi.auth.common.User;
+import com.google.api.server.spi.auth.microsoft.MicrosoftIdToken;
 import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.config.Singleton;
 import com.google.api.server.spi.config.model.ApiMethodConfig;
@@ -128,13 +129,17 @@ public class ExtendedAuthenticator implements Authenticator {
     AuthInfo getAuthInfo(HttpServletRequest request) {
         String token = GoogleAuth.getAuthToken(request);
         
-        //The user was authenticated with either one of the two.
         final GoogleAuth.TokenInfo tokenInfo = (GoogleAuth.TokenInfo) request.getAttribute(Attribute.TOKEN_INFO);
         if (tokenInfo != null) {
             return new AuthInfo(token, tokenInfo);
         }
     
-        final GoogleIdToken tokenId = (GoogleIdToken) request.getAttribute(Attribute.ID_TOKEN);
-        return new AuthInfo(token, tokenId);
+        final GoogleIdToken idToken = (GoogleIdToken) request.getAttribute(Attribute.ID_TOKEN);
+        if (idToken != null) {
+            return new AuthInfo(token, idToken);
+        }
+        
+        final MicrosoftIdToken microsoftIdToken = (MicrosoftIdToken) request.getAttribute(Attribute.MICROSOFT_ID_TOKEN);
+        return new AuthInfo(token, microsoftIdToken);
     }
 }

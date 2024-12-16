@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.server.spi.auth.GoogleAuth;
+import com.google.api.server.spi.auth.microsoft.MicrosoftIdToken;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 
@@ -139,4 +140,22 @@ public class AuthInfo {
         this.rawTokenInfo = tokenInfo;
         this.claims = new Claims(new ObjectMapper().createObjectNode());
     }
+    
+    @SneakyThrows(JsonProcessingException.class)
+    public AuthInfo(String token, MicrosoftIdToken microsoftIdToken) {
+        this.authType = AuthType.MS_OAUTH2;
+        this.token = token;
+        MicrosoftIdToken.Payload payload = microsoftIdToken.getPayload();
+        this.userId = payload.getObjectId();
+        this.email = payload.getEmail();
+        this.verifiedEmail = true;
+        this.hd = null;
+        this.clientId = null;
+        this.audience = payload.getAudienceAsList();
+        this.scopes = null;
+        this.expiresInSeconds = payload.getExpirationTimeSeconds();
+        this.rawTokenInfo = microsoftIdToken;
+        this.claims = new Claims(new ObjectMapper().readTree(payload.toString()));
+    }
+
 }
