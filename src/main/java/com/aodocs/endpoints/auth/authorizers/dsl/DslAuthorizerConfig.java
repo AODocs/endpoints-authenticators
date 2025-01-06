@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.aodocs.endpoints.auth.authorizers.Authorizer;
 import com.aodocs.endpoints.auth.authorizers.audience.CurrentProjectAudienceAuthorizer;
+import com.aodocs.endpoints.auth.authorizers.audience.EntraIdApplicationAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.ClientIdsAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.clientid.CurrentProjectClientIdAuthorizer;
 import com.aodocs.endpoints.auth.authorizers.config.VersionContainsAuthorizer;
@@ -87,6 +88,7 @@ public interface DslAuthorizerConfig {
             .put("versionContains", VersionContainsAuthorizer.class)
             .put("httpMethod", HttpMethodAuthorizer.class)
             .put("clientIds", ClientIdsAuthorizer.class)
+            .put("entraIdAppIds", EntraIdApplicationAuthorizer.class)
             .put("anyJwtClaim", AnyJwtClaimAuthorizer.class)
             .put("allJwtClaims", AllJwtClaimsAuthorizer.class)
             .build();
